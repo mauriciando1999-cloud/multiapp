@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Registro Maestro | Multiamerica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,900&family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
+    <style>
+        body { background-color: #ffffff; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        .font-title { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; }
+        input, select { 
+            background: #f9f9f9 !important; 
+            border: 1px solid #ddd !important; 
+            border-radius: 12px; 
+            padding: 12px; 
+            width: 100%; 
+            font-size: 16px;
+            position: relative;
+            z-index: 10; 
+            cursor: text;
+        }
+        label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 800; margin-bottom: 8px; display: block; }
+        .btn-primary { background: #1a1a1a; color: white; border-radius: 20px; font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; transition: all 0.4s; }
+        .btn-ai { background: linear-gradient(90deg, #FF8801, #ff4d01); color: white; border-radius: 15px; font-weight: 900; font-style: italic; transition: all 0.2s; }
+        .btn-ai:hover { box-shadow: 0 4px 15px rgba(255,136,1,0.4); transform: translateY(-2px); }
+        
+        /* Estilos para el drag and drop */
+        .sortable-ghost { opacity: 0.4; border: 2px dashed #FF8801; }
+        .photo-item { cursor: grab; position: relative; }
+        .photo-item:active { cursor: grabbing; }
+        .badge-order { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.5); color: white; font-size: 9px; padding: 2px 6px; border-radius: 5px; pointer-events: none; }
+    </style>
+</head>
+
+<body class="p-4 md:p-12">
+    <main class="max-w-4xl mx-auto p-6 bg-white border border-gray-100 shadow-2xl rounded-[40px]">
+        <header class="mb-10 border-b pb-8 flex justify-between items-center">
+            <div>
+                <span class="text-[#FF8801] text-[10px] font-bold uppercase tracking-[0.4em]">Inventory Core</span>
+                <h1 id="page-title" class="text-3xl font-title uppercase italic">REGISTRO.</h1>
+            </div>
+            <a href="dashboard.html" class="p-3 bg-gray-50 rounded-full hover:bg-gray-200 transition-colors">
+                <i class="fa-solid fa-xmark text-gray-400"></i>
+            </a>
+        </header>
+
+        <form id="multi-form" class="space-y-8">
+            <section class="space-y-4">
+                <label>01. GALERÍA (ARRASTRA PARA REORDENAR)</label>
+                <div id="drop-zone" class="relative border-2 border-dashed border-gray-200 rounded-[30px] p-6 text-center bg-gray-50/50 overflow-hidden min-h-[150px]">
+                    <input type="file" id="photos" multiple accept="image/*" 
+                           class="absolute inset-0 opacity-0 cursor-pointer z-0" 
+                           onchange="handleFiles(this)">
+                    
+                    <div id="preview-container" class="grid grid-cols-3 md:grid-cols-4 gap-3 hidden relative z-20"></div>
+                    
+                    <div id="upload-placeholder" class="py-6 pointer-events-none">
+                        <i class="fa-solid fa-camera text-gray-200 text-3xl mb-2"></i>
+                        <p class="text-[10px] font-mono text-gray-400 uppercase">Toca o arrastra para subir fotos</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-2">
+                    <p class="text-[9px] text-gray-400 font-bold uppercase">La primera foto será la portada</p>
+                    <button type="button" id="btn-escanear" onclick="escanearFoto()" class="btn-ai px-6 py-3 text-[10px] uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Completar con IA
+                    </button>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div><label>Marca</label><input type="text" id="brand" required></div>
+                <div><label>Modelo</label><input type="text" id="model" required></div>
+                <div><label>Año</label><input type="number" id="year" required></div>
+            </section>
+
+            <!-- SE AGREGÓ EL CAMPO TIPO AQUÍ PARA LOS FILTROS -->
+            <section class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                <div><label>Tipo (Filtro)</label>
+                    <select id="type">
+                        <option value="SUV">SUV</option>
+                        <option value="Sedan">Sedan</option>
+                        <option value="Pickup">Pickup</option>
+                        <option value="Deportivo">Deportivo</option>
+                        <option value="Hatchback">Hatchback</option>
+                        <option value="Van">Van</option>
+                    </select>
+                </div>
+                <div><label>Transmisión</label>
+                    <select id="transmission">
+                        <option value="AUTOMÁTICO">AUTOMÁTICO</option>
+                        <option value="SINCRÓNICO">SINCRÓNICO</option>
+                    </select>
+                </div>
+                <div><label>Color</label><input type="text" id="color"></div>
+                <div><label>Motor</label><input type="text" id="engine"></div>
+                <div><label>KM</label><input type="number" id="mileage"></div>
+            </section>
+
+            <section class="bg-gray-50 p-6 rounded-[30px] grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label>Costo ($)</label><input type="number" id="cost_total"></div>
+                <div><label class="text-[#FF8801]">Precio Venta ($)</label><input type="number" id="price_sale" required></div>
+            </section>
+
+            <button type="submit" id="submit-btn" class="btn-primary w-full py-6 text-[12px] uppercase tracking-[0.3em]">PUBLICAR UNIDAD</button>
+        </form>
+    </main>
+
+    <script>
+        const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('id'); 
+        const userEmail = localStorage.getItem('operador_email');
+        
+        let listaDeFotos = []; 
+        let sortable;
+
+        if (!userEmail) window.location.href = 'index.html';
+
+        const container = document.getElementById('preview-container');
+        sortable = new Sortable(container, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function() {
+                reordenarLista();
+            }
+        });
+
+        async function prepararFormulario() {
+            if (!editId) return;
+            
+            document.getElementById('page-title').innerText = "MODIFICAR.";
+            document.getElementById('submit-btn').innerText = "ACTUALIZAR CAMBIOS";
+
+            const { data: u, error } = await _supabase.from('inventario').select('*').eq('id', editId).maybeSingle();
+            if (error || !u) return;
+
+            document.getElementById('brand').value = u.marca || '';
+            document.getElementById('model').value = u.modelo || '';
+            document.getElementById('year').value = u.anio || '';
+            document.getElementById('price_sale').value = u.precio_venta || '';
+            document.getElementById('mileage').value = u.kilometraje || '';
+            document.getElementById('color').value = u.color || '';
+            document.getElementById('engine').value = u.motor || '';
+            document.getElementById('cost_total').value = u.costo_adquisicion || '';
+            
+            if (u.transmision) document.getElementById('transmission').value = u.transmision.toUpperCase();
+            if (u.tipo) document.getElementById('type').value = u.tipo; // Carga el tipo existente
+
+            if (u.fotos && u.fotos.length > 0) {
+                u.fotos.forEach(path => {
+                    const { data } = _supabase.storage.from('autos').getPublicUrl(path);
+                    listaDeFotos.push({ file: null, url: data.publicUrl, isNew: false, path: path });
+                });
+                renderizarPreviews();
+            }
+        }
+
+        function handleFiles(input) {
+            const files = Array.from(input.files);
+            files.forEach(file => {
+                const url = URL.createObjectURL(file);
+                listaDeFotos.push({ file: file, url: url, isNew: true, path: '' });
+            });
+            renderizarPreviews();
+            input.value = ""; 
+        }
+
+        function renderizarPreviews() {
+            const container = document.getElementById('preview-container');
+            const placeholder = document.getElementById('upload-placeholder');
+            
+            container.innerHTML = '';
+            
+            if (listaDeFotos.length > 0) {
+                container.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            } else {
+                container.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+
+            listaDeFotos.forEach((foto, index) => {
+                const div = document.createElement('div');
+                div.className = 'photo-item aspect-square rounded-xl overflow-hidden border-2 relative ' + (foto.isNew ? 'border-orange-500' : 'border-gray-100');
+                div.setAttribute('data-id', index);
+                
+                div.innerHTML = `
+                    <span class="badge-order">${index === 0 ? 'PORTADA' : index + 1}</span>
+                    <img src="${foto.url}" class="w-full h-full object-cover">
+                    <button type="button" onclick="eliminarFoto(${index})" class="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] z-30 flex items-center justify-center">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function reordenarLista() {
+            const items = Array.from(container.querySelectorAll('.photo-item'));
+            const nuevaLista = items.map(item => {
+                const id = item.getAttribute('data-id');
+                return listaDeFotos[id];
+            });
+            listaDeFotos = nuevaLista;
+            renderizarPreviews();
+        }
+
+        function eliminarFoto(index) {
+            listaDeFotos.splice(index, 1);
+            renderizarPreviews();
+        }
+
+        async function registrarVehiculo(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            
+            if (listaDeFotos.length === 0) return alert("Sube al menos una foto");
+
+            btn.disabled = true;
+            btn.innerText = "PROCESANDO IMÁGENES...";
+
+            try {
+                let pathsFinales = [];
+
+                for (let i = 0; i < listaDeFotos.length; i++) {
+                    const foto = listaDeFotos[i];
+                    if (foto.isNew) {
+                        const name = `${Date.now()}_${i}.png`;
+                        const { data, error } = await _supabase.storage.from('autos').upload(name, foto.file);
+                        if (error) throw error;
+                        pathsFinales.push(data.path);
+                    } else {
+                        pathsFinales.push(foto.path);
+                    }
+                }
+
+                const payload = {
+                    marca: document.getElementById('brand').value.toUpperCase().trim(),
+                    modelo: document.getElementById('model').value.toUpperCase().trim(),
+                    anio: parseInt(document.getElementById('year').value),
+                    precio_venta: parseFloat(document.getElementById('price_sale').value),
+                    kilometraje: parseInt(document.getElementById('mileage').value) || 0,
+                    transmision: document.getElementById('transmission').value,
+                    tipo: document.getElementById('type').value, // SE GUARDA EL TIPO AQUÍ
+                    color: document.getElementById('color').value.toUpperCase().trim(),
+                    motor: document.getElementById('engine').value.toUpperCase().trim(),
+                    costo_adquisicion: parseFloat(document.getElementById('cost_total').value) || 0,
+                    fotos: pathsFinales
+                };
+
+                let result;
+                if (editId) {
+                    result = await _supabase.from('inventario').update(payload).eq('id', editId).select();
+                } else {
+                    payload.estatus = 'Disponible';
+                    payload.creado_por = userEmail;
+                    result = await _supabase.from('inventario').insert([payload]).select();
+                }
+
+                if (result.error) throw result.error;
+                window.location.href = 'inventario.html';
+
+            } catch (err) {
+                alert("ERROR: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "INTENTAR DE NUEVO";
+            }
+        }
+
+        async function escanearFoto() {
+            if (listaDeFotos.length === 0) return alert("⚠️ Sube fotos primero");
+            const btnEscanear = document.getElementById('btn-escanear');
+            const fotoParaAnalizar = listaDeFotos.find(f => f.isNew)?.file;
+            
+            if (!fotoParaAnalizar) return alert("⚠️ La IA necesita que acabes de subir una foto nueva para analizarla.");
+
+            btnEscanear.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analizando...';
+            btnEscanear.disabled = true;
+
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const base64Data = reader.result.split(',')[1];
+                try {
+                    const response = await fetch('/api/gemini', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            // IA ACTUALIZADA PARA PREDECIR EL TIPO DE VEHÍCULO
+                            prompt: 'Responde solo JSON con marca, modelo, anio, color, y tipo (El tipo debe ser estrictamente uno de estos: SUV, Sedan, Pickup, Deportivo, Hatchback, Van).',
+                            image: base64Data,
+                            mimeType: fotoParaAnalizar.type
+                        })
+                    });
+                    const data = await response.json();
+                    let textoLimpio = data.respuesta.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const vehiculo = JSON.parse(textoLimpio);
+
+                    document.getElementById('brand').value = vehiculo.marca || '';
+                    document.getElementById('model').value = vehiculo.modelo || '';
+                    document.getElementById('year').value = vehiculo.anio || '';
+                    document.getElementById('color').value = vehiculo.color || '';
+                    
+                    // Asigna el tipo predecido si coincide con las opciones
+                    if (vehiculo.tipo) {
+                        const select = document.getElementById('type');
+                        const opciones = Array.from(select.options).map(o => o.value.toLowerCase());
+                        if (opciones.includes(vehiculo.tipo.toLowerCase())) {
+                            select.value = vehiculo.tipo.charAt(0).toUpperCase() + vehiculo.tipo.slice(1).toLowerCase();
+                            // Fix para el caso particular de SUV
+                            if (vehiculo.tipo.toLowerCase() === 'suv') select.value = 'SUV';
+                        }
+                    }
+                    
+                    btnEscanear.innerHTML = '¡Listo!';
+                } catch (e) {
+                    alert("Error en análisis");
+                } finally {
+                    btnEscanear.disabled = false;
+                    setTimeout(() => btnEscanear.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> IA Auto-Completar', 2000);
+                }
+            };
+            reader.readAsDataURL(fotoParaAnalizar);
+        }
+
+        document.getElementById('multi-form').addEventListener('submit', registrarVehiculo);
+        document.addEventListener('DOMContentLoaded', prepararFormulario);
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Ventas Realizadas | Multiamerica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@1,900&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet"/>
+
+    <style>
+        body { background-color: #FFFFFF; font-family: 'Montserrat', sans-serif; color: #111; }
+        
+        .sold-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 24px;
+            overflow: hidden;
+            filter: grayscale(0.4);
+            transition: all 0.4s ease;
+        }
+        .sold-card:hover { filter: grayscale(0); border-color: #22C55E; } /* Verde al hacer hover */
+
+        .sold-badge {
+            background: #ef4444; /* Rojo intenso para el contraste */
+            color: white;
+            font-family: 'Epilogue';
+            font-weight: 900;
+            font-style: italic;
+            padding: 8px 20px;
+            border-radius: 0 0 0 20px;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .price-sold {
+            font-family: 'Epilogue';
+            font-weight: 900;
+            font-style: italic;
+            text-decoration: line-through;
+            color: #999;
+        }
+    </style>
+</head>
+<body class="p-6 md:p-12">
+
+    <header class="max-w-[1400px] mx-auto mb-16 flex flex-col md:flex-row justify-between items-end gap-6">
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span class="font-mono text-[10px] tracking-widest text-gray-400 uppercase">Historial de Cierres exitosos</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-['Epilogue'] font-black uppercase italic tracking-tighter text-black">
+                UNIDADES <span class="text-green-500">VENDIDAS</span>
+            </h1>
+        </div>
+        <div class="flex gap-4">
+            <a href="inventario.html" class="border-2 border-black px-8 py-4 rounded-2xl font-bold uppercase italic text-xs hover:bg-black hover:text-white transition-all">
+                Ir al Stock
+            </a>
+        </div>
+    </header>
+
+    <section class="max-w-[1400px] mx-auto mb-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
+            <p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Total Ventas</p>
+            <h4 id="count-ventas" class="text-4xl font-['Epilogue'] font-black italic">0</h4>
+        </div>
+    </section>
+
+    <main id="grid-ventas" class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        </main>
+<script>
+    // Sistema de acceso rápido para Admin
+    (function adminGuard() {
+        const ADMIN_KEY = "ENX_2026"; // Cambia esto por tu clave secreta de Envolvia
+        const sessionActive = sessionStorage.getItem('admin_access');
+
+        if (!sessionActive) {
+            const entry = prompt("ACCESO RESTRINGIDO - COMANDO DE FLOTA\nIngrese clave de administrador:");
+            
+            if (entry === ADMIN_KEY) {
+                sessionStorage.setItem('admin_access', 'true');
+            } else {
+                alert("Acceso Denegado.");
+                window.location.href = "inventario.html"; // Lo saca si falla
+            }
+        }
+    })();
+</script>
+    <script>
+        const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
+        // Mapeador de imagen (igual al de inventario)
+        function getImg(data) {
+            if (!data || data.length === 0) return 'https://placehold.co/800x600?text=VENDIDO';
+            let path = Array.isArray(data) ? data[0] : data;
+            path = path.replace(/['"\[\]{}]/g, '').trim();
+            const { data: urlData } = _supabase.storage.from('autos').getPublicUrl(path);
+            return urlData.publicUrl;
+        }
+
+        async function cargarVentas() {
+            try {
+                const { data, error } = await _supabase
+                    .from('inventario')
+                    .select('*')
+                    .eq('estatus', 'Vendido') // FILTRO CLAVE
+                    .order('creado_el', { ascending: false });
+
+                if (error) throw error;
+
+                document.getElementById('count-ventas').innerText = data.length;
+                render(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function render(items) {
+            const container = document.getElementById('grid-ventas');
+            if (items.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center py-20 text-gray-300 font-mono italic uppercase">No hay registros de ventas todavía.</p>`;
+                return;
+            }
+
+            container.innerHTML = items.map(u => `
+                <div class="sold-card group">
+                    <div class="relative h-64 bg-gray-100">
+                        <img src="${getImg(u.fotos)}" class="w-full h-full object-cover">
+                        <div class="absolute top-0 right-0">
+                            <div class="sold-badge">Sold Out</div>
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-2xl font-black uppercase italic leading-none">${u.marca} <span class="text-gray-300 font-normal">${u.modelo}</span></h3>
+                            <span class="text-[10px] font-mono text-gray-400">${u.anio}</span>
+                        </div>
+                        <div class="flex justify-between items-end border-t border-gray-50 pt-6">
+                            <div>
+                                <p class="text-[8px] font-bold text-gray-400 uppercase mb-1">Precio de Cierre</p>
+                                <p class="text-3xl font-['Epilogue'] font-black italic text-green-500">
+                                    $${(u.precio_venta || 0).toLocaleString('es-ES')}
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <i class="fa-solid fa-circle-check text-green-500 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        cargarVentas();
+    </script>
+</body>
+</html>

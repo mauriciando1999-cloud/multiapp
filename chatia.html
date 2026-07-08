@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente Virtual | Multiamerica</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet">
+    <script src="config.js"></script>
+
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        .font-title { font-family: 'Montserrat', sans-serif; }
+        .chat-container { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .msg-ia { background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 20px 20px 20px 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .msg-user { background-color: #ff8801; color: white; border-radius: 20px 20px 4px 20px; box-shadow: 0 4px 15px rgba(255,136,1,0.2); }
+    </style>
+</head>
+<body>
+
+    <header class="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-sm z-10">
+        <div class="flex items-center gap-4">
+            <button onclick="history.back()" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-50 transition-all">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <h1 class="text-xs font-black uppercase tracking-widest text-gray-400">Asistente de Inventario</h1>
+                </div>
+                <h2 class="text-xl font-title italic uppercase leading-none mt-1">Talento <span class="text-[#ff8801]">IA</span></h2>
+            </div>
+        </div>
+        <div class="hidden md:block px-4 py-1.5 bg-gray-50 rounded-full border border-gray-100">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest" id="contexto-vehiculo">Cargando contexto...</span>
+        </div>
+    </header>
+
+    <main class="chat-container p-4 md:p-8 max-w-4xl mx-auto w-full flex flex-col gap-6" id="chat-box">
+        
+        <div id="loader-inicial" class="flex gap-4 max-w-[85%]">
+            <div class="w-8 h-8 rounded-full bg-black flex-shrink-0 flex items-center justify-center text-[#ff8801] text-xs">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="msg-ia p-4">
+                <div class="flex gap-1">
+                    <span class="w-2 h-2 bg-gray-300 rounded-full animate-bounce"></span>
+                    <span class="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+                    <span class="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t border-gray-100 p-4 z-10">
+        <div class="max-w-4xl mx-auto relative flex items-center">
+            <input type="text" id="user-input" placeholder="Escribe tu consulta aquí..." 
+                class="w-full bg-gray-50 border border-gray-200 rounded-full py-4 pl-6 pr-16 text-sm font-semibold outline-none focus:border-[#ff8801] focus:ring-1 focus:ring-[#ff8801] transition-all">
+            
+            <button onclick="enviarMensaje()" class="absolute right-2 w-10 h-10 bg-[#ff8801] text-white rounded-full flex items-center justify-center hover:bg-black transition-colors shadow-md">
+                <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+        </div>
+        <p class="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-3">Multiamerica AI - Respuestas automáticas sujetas a verificación en piso</p>
+    </footer>
+
+    <script>
+        const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        const urlParams = new URLSearchParams(window.location.search);
+        const vehiculoId = urlParams.get('id');
+        let contextoAuto = null;
+
+        document.addEventListener("DOMContentLoaded", initChat);
+
+        async function initChat() {
+            if (!vehiculoId) {
+                agregarMensajeIA("Hola. Para darte información precisa, por favor selecciona un vehículo desde nuestro catálogo.");
+                document.getElementById('loader-inicial').remove();
+                return;
+            }
+
+            try {
+                // Obtenemos los datos del carro para darle contexto a la IA
+                const { data, error } = await _supabase.from('inventario').select('marca, modelo, anio, precio_venta').eq('id', vehiculoId).single();
+                
+                if (error) throw error;
+                contextoAuto = data;
+
+                document.getElementById('contexto-vehiculo').innerText = `${data.marca} ${data.modelo} (${data.anio})`;
+                
+                document.getElementById('loader-inicial').remove();
+                
+                // Mensaje enganche inicial
+                const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+                const precio = formatter.format(data.precio_venta);
+                
+                agregarMensajeIA(`¡Hola! 👋 Veo que te interesa el **${data.marca} ${data.modelo} ${data.anio}** listado en ${precio}. Soy el asesor virtual de Multiamerica. ¿Tienes alguna duda técnica sobre este vehículo o prefieres que agende una visita para que lo veas en persona?`);
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loader-inicial').remove();
+                agregarMensajeIA("Hola. Hubo un error al cargar los datos del vehículo, pero estoy aquí para ayudarte. ¿En qué te puedo asesorar hoy?");
+            }
+        }
+
+        // Función visual para renderizar mensajes del usuario
+        function enviarMensaje() {
+            const input = document.getElementById('user-input');
+            const texto = input.value.trim();
+            if (!texto) return;
+
+            // 1. Mostrar mensaje del usuario
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `
+                <div class="flex gap-4 max-w-[85%] self-end flex-row-reverse">
+                    <div class="msg-user p-4 text-sm font-semibold leading-relaxed">
+                        ${texto}
+                    </div>
+                </div>
+            `;
+            
+            input.value = '';
+            scrollToBottom();
+
+            // 2. Aquí iría la llamada a tu Edge Function de IA
+            // simularRespuestaIA();
+        }
+
+        // Función visual para renderizar mensajes de la IA
+        function agregarMensajeIA(texto) {
+            // Reemplazamos negritas markdown por HTML para que se vea bien
+            const textoFormateado = texto.replace(/\*\*(.*?)\*\*/g, '<span class="font-black text-black">$1</span>');
+            
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `
+                <div class="flex gap-4 max-w-[85%]">
+                    <div class="w-8 h-8 rounded-full bg-black flex-shrink-0 flex items-center justify-center text-[#ff8801] text-xs">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="msg-ia p-4 text-sm text-gray-700 leading-relaxed font-medium">
+                        ${textoFormateado}
+                    </div>
+                </div>
+            `;
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Permitir enviar con la tecla Enter
+        document.getElementById("user-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                enviarMensaje();
+            }
+        });
+    </script>
+</body>
+</html>

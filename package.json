@@ -1,0 +1,7 @@
+{
+  "name": "multiamerica-core",
+  "version": "1.0.0",
+  "dependencies": {
+    "@google/generative-ai": "^0.11.4"
+  }
+}

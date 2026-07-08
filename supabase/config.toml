@@ -1,0 +1,33 @@
+
+[functions.analizar-cv]
+enabled = true
+verify_jwt = true
+import_map = "./functions/analizar-cv/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/analizar-cv/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/analizar-cv/*.html" ]
+
+[functions.analizar-talento]
+enabled = true
+verify_jwt = true
+import_map = "./functions/analizar-talento/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/analizar-talento/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/analizar-talento/*.html" ]
+
+[functions.enviar-cita]
+enabled = true
+verify_jwt = true
+import_map = "./functions/enviar-cita/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/enviar-cita/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/enviar-cita/*.html" ]

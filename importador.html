@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Importador Masivo | Central</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="config.js"></script>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@1,900&family=Montserrat:wght@400;700;900&family=Roboto+Mono&display=swap" rel="stylesheet"/>
+
+    <style>
+        body { 
+            background-color: #FFFFFF; 
+            color: #111; 
+            font-family: 'Montserrat', sans-serif;
+            background-image: radial-gradient(#f0f0f0 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .font-epilogue { font-family: 'Epilogue', sans-serif; }
+        .text-orange-envolvia { color: #FF8801; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(0,0,0,0.05); border-radius: 32px; }
+        
+        /* Zona de arrastrar y soltar */
+        .drop-zone { border: 2px dashed #e5e7eb; transition: all 0.3s ease; }
+        .drop-zone.dragover { border-color: #FF8801; background-color: #fffaf5; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="max-w-[1200px] mx-auto p-8 flex justify-between items-center">
+        <div class="flex items-center gap-6">
+            <a href="dashboard.html" class="w-12 h-12 flex items-center justify-center rounded-2xl border border-gray-100 hover:bg-black hover:text-white transition-all">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <div>
+                <span class="text-gray-400 font-mono text-[9px] tracking-[0.5em] uppercase block mb-1">Data Entry Automation</span>
+                <h1 class="text-4xl font-epilogue font-black italic tracking-tighter uppercase leading-none">
+                    DATA <span class="text-orange-envolvia">IMPORT</span>
+                </h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1200px] mx-auto p-8">
+        
+        <div class="glass-card p-12 text-center mb-8 drop-zone" id="drop-zone">
+            <div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-file-csv text-3xl text-orange-envolvia"></i>
+            </div>
+            <h2 class="text-2xl font-black uppercase italic mb-2">Sube tu Inventario (.CSV)</h2>
+            <p class="text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-8">Exporta tu Google Sheets como "Valores separados por comas"</p>
+            
+            <input type="file" id="csv-file" accept=".csv" class="hidden" onchange="procesarArchivo(event)">
+            <label for="csv-file" class="bg-black text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-envolvia transition-all cursor-pointer shadow-xl">
+                Seleccionar Archivo
+            </label>
+        </div>
+
+        <div id="preview-section" class="hidden glass-card p-8">
+            <div class="flex justify-between items-end mb-6 border-b border-gray-100 pb-6">
+                <div>
+                    <h3 class="text-xl font-black uppercase italic">Vista Previa de Datos</h3>
+                    <p class="text-[10px] font-mono text-gray-400 uppercase tracking-widest mt-1">Verifica antes de inyectar a la base de datos</p>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="cancelarImportacion()" class="px-6 py-3 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50">Cancelar</button>
+                    <button id="btn-upload" onclick="subirASupabase()" class="px-6 py-3 bg-[#FF8801] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Importar <span id="contador-filas">0</span> Unidades
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-[10px] uppercase font-bold">
+                    <thead class="bg-gray-50 text-gray-400">
+                        <tr>
+                            <th class="p-4 rounded-tl-xl">Marca</th>
+                            <th class="p-4">Modelo</th>
+                            <th class="p-4">Año</th>
+                            <th class="p-4">Color</th>
+                            <th class="p-4">Transmisión</th>
+                            <th class="p-4">KM</th>
+                            <th class="p-4 rounded-tr-xl">Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        let datosAImportar = [];
+
+        // Seguridad: Solo Admins
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('operador_rol') !== 'admin') {
+                alert("Acceso denegado. Solo administrador.");
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        // Lógica de Limpieza de Datos (Parser Inteligente)
+        function limpiarNumero(string) {
+            if (!string) return 0;
+            // Quita puntos, signos de dólar, espacios y el "KM"
+            const limpio = string.toString().replace(/[$. KMkm\n\r]/g, '').trim();
+            return parseInt(limpio) || 0;
+        }
+
+        function limpiarTexto(string) {
+            return string ? string.toString().replace(/[\n\r]/g, '').trim() : '';
+        }
+
+        function procesarArchivo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                header: true, // Asume que la primera fila tiene los títulos
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const rawData = results.data;
+                    datosAImportar = rawData.map(fila => {
+                        // Mapeo flexible adaptado a las cabeceras comunes de Excel
+                        const obtenerValor = (claves) => {
+                            const claveEncontrada = Object.keys(fila).find(k => claves.some(c => k.toUpperCase().includes(c)));
+                            return claveEncontrada ? fila[claveEncontrada] : '';
+                        };
+
+                        return {
+                            marca: limpiarTexto(obtenerValor(['MARCA'])),
+                            modelo: limpiarTexto(obtenerValor(['MODELO'])),
+                            version: limpiarTexto(obtenerValor(['VERSIÓN', 'VERSION'])),
+                            tipo: limpiarTexto(obtenerValor(['TIPO'])),
+                            anio: limpiarNumero(obtenerValor(['AÑO', 'ANO'])),
+                            color: limpiarTexto(obtenerValor(['COLOR'])),
+                            kilometraje: limpiarNumero(obtenerValor(['KILÓMETROS', 'KILOMETROS', 'KM'])),
+                            transmision: limpiarTexto(obtenerValor(['TRANSMISIÓN', 'TRANSMISION'])),
+                            detalles: limpiarTexto(obtenerValor(['DETALLES'])),
+                            precio_venta: limpiarNumero(obtenerValor(['PRECIO'])),
+                            estatus: 'DISPONIBLE'
+                        };
+                    }).filter(u => u.marca && u.modelo); // Ignorar filas vacías
+
+                    mostrarVistaPrevia();
+                }
+            });
+        }
+
+        function mostrarVistaPrevia() {
+            document.getElementById('drop-zone').classList.add('hidden');
+            const previewSection = document.getElementById('preview-section');
+            const tbody = document.getElementById('preview-body');
+            
+            document.getElementById('contador-filas').innerText = datosAImportar.length;
+            
+            // Mostrar solo las primeras 100 filas en la vista previa para no colapsar el navegador
+            tbody.innerHTML = datosAImportar.slice(0, 100).map(u => `
+                <tr class="border-b border-gray-50">
+                    <td class="p-3 text-black">${u.marca}</td>
+                    <td class="p-3 text-black">${u.modelo}</td>
+                    <td class="p-3 text-gray-500">${u.anio}</td>
+                    <td class="p-3 text-gray-500">${u.color}</td>
+                    <td class="p-3 text-gray-500">${u.transmision}</td>
+                    <td class="p-3 font-mono">${u.kilometraje.toLocaleString()}</td>
+                    <td class="p-3 font-epilogue italic text-[#FF8801]">$${u.precio_venta.toLocaleString()}</td>
+                </tr>
+            `).join('');
+
+            previewSection.classList.remove('hidden');
+        }
+
+        function cancelarImportacion() {
+            datosAImportar = [];
+            document.getElementById('csv-file').value = '';
+            document.getElementById('preview-section').classList.add('hidden');
+            document.getElementById('drop-zone').classList.remove('hidden');
+        }
+
+        async function subirASupabase() {
+            const btn = document.getElementById('btn-upload');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Subiendo...`;
+            btn.disabled = true;
+
+            try {
+                // Inserción masiva en Supabase
+                const { error } = await _supabase.from('inventario').insert(datosAImportar);
+                if (error) throw error;
+
+                alert(`¡Éxito! ${datosAImportar.length} unidades añadidas al inventario.`);
+                window.location.href = 'inventario.html';
+                
+            } catch (err) {
+                console.error(err);
+                alert("Error al importar: " + err.message);
+                btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Reintentar`;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

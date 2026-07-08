@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Restringido | Multiamerica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:ital,wght@1,900&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0; padding: 0; font-family: 'Inter', sans-serif;
+            overflow: hidden; background-color: #000;
+        }
+
+        #video-background {
+            position: fixed; right: 0; bottom: 0;
+            min-width: 100%; min-height: 100%;
+            z-index: -2; object-fit: cover; opacity: 0.8;
+        }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 100%);
+            backdrop-filter: blur(8px); z-index: -1;
+        }
+
+        .font-title { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; letter-spacing: -0.05em; }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.15);
+        }
+
+        .input-premium {
+            border: 2px solid transparent; background: #f3f4f6;
+            transition: all 0.3s ease;
+        }
+        .input-premium:focus {
+            background: #ffffff; border-color: #FF8801; outline: none;
+            box-shadow: 0 10px 25px rgba(255, 136, 1, 0.1);
+        }
+
+        .btn-primary {
+            background: #000000; color: #ffffff;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-primary:hover:not(:disabled) { background: #FF8801; transform: translateY(-2px); }
+        .btn-primary:disabled { background: #cccccc; cursor: not-allowed; transform: none; }
+        .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <video autoplay muted loop playsinline id="video-background">
+        <source src="videojeep.mp4" type="video/mp4">
+    </video>
+    <div class="overlay"></div>
+
+    <div class="max-w-md w-full space-y-6 relative z-10">
+        <header class="text-center space-y-1">
+            <span class="font-mono text-[9px] uppercase tracking-[0.4em] text-gray-800 font-bold">Módulo de Administración</span>
+            <h1 class="text-7xl font-title uppercase leading-none text-black tracking-tighter">CENTRAL.</h1>
+        </header>
+
+        <div class="login-card p-10 rounded-[40px] space-y-6">
+            <div id="auth-form" class="space-y-5">
+                
+                <div class="space-y-1">
+                    <label class="font-mono text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">ID Operador (Email)</label>
+                    <input type="email" id="email" placeholder="gerencia@multiamerica.com" 
+                        class="input-premium w-full p-4 rounded-2xl text-sm font-bold text-black placeholder-gray-400">
+                </div>
+
+                <div class="space-y-1 relative">
+                    <label class="font-mono text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Security Key</label>
+                    <input type="password" id="password" placeholder="••••••••" 
+                        class="input-premium w-full p-4 rounded-2xl text-sm font-bold text-black placeholder-gray-400">
+                    <button type="button" onclick="togglePassword()" class="absolute right-4 top-9 text-gray-400 hover:text-black transition-colors">
+                        <i class="fa-solid fa-eye" id="eye-icon"></i>
+                    </button>
+                </div>
+
+                <button onclick="handleAuth()" id="main-btn" class="btn-primary w-full py-5 rounded-2xl font-black uppercase tracking-widest text-xs mt-4">
+                    Autorizar Acceso →
+                </button>
+
+                
+
+               
+            </div>
+
+            <div id="status-msg" class="text-[10px] font-black uppercase text-center hidden tracking-widest p-4 rounded-xl border"></div>
+        </div>
+
+        <div class="text-center">
+            <button onclick="toggleMode()" id="toggle-btn" class="font-mono text-[9px] uppercase tracking-widest text-gray-600 font-bold hover:text-[#FF8801] transition-colors bg-white/50 backdrop-blur-md px-6 py-2 rounded-full border border-white">
+                ¿Nuevo operador? Solicitar Credenciales
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        let isRegisterMode = false;
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function toggleMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('main-btn').innerText = isRegisterMode ? "REGISTRAR CREDENCIALES →" : "AUTORIZAR ACCESO →";
+            document.getElementById('toggle-btn').innerText = isRegisterMode ? "Ya tengo acceso - Volver al Login" : "¿Nuevo operador? Solicitar Credenciales";
+            hideStatus();
+        }
+
+        function showStatus(msg, isError = true) {
+            const el = document.getElementById('status-msg');
+            el.innerHTML = isError ? `<i class="fa-solid fa-triangle-exclamation mr-1"></i> ${msg}` : `<i class="fa-solid fa-check-circle mr-1"></i> ${msg}`;
+            el.className = `text-[10px] font-black uppercase text-center tracking-widest p-4 rounded-xl block border ${isError ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`;
+            el.classList.remove('hidden');
+        }
+
+        function hideStatus() { document.getElementById('status-msg').classList.add('hidden'); }
+
+        // Función para extraer el rol de la Whitelist
+        async function fetchUserRole(email) {
+            const { data, error } = await _supabase.from('whitelist').select('rol').eq('email', email).maybeSingle();
+            if (error || !data) return 'vendedor'; // Default si no está o hay error
+            return data.rol;
+        }
+
+        async function handleAuth() {
+            const emailInput = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('main-btn');
+
+            if (!emailInput || !password) {
+                showStatus("Faltan credenciales operativas");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESANDO...`;
+            hideStatus();
+
+            try {
+                if (isRegisterMode) {
+                    // VALIDACIÓN DE WHITELIST
+                    const { data: userInWhitelist, error: whitelistError } = await _supabase
+                        .from('whitelist').select('rol').eq('email', emailInput).maybeSingle();
+
+                    if (whitelistError) throw new Error("Fallo al contactar el servidor de seguridad.");
+                    if (!userInWhitelist) throw new Error("Acceso Denegado: Correo no está en la Whitelist.");
+
+                    // REGISTRO
+                    const { data: authData, error: signUpError } = await _supabase.auth.signUp({
+                        email: emailInput, password: password
+                    });
+
+                    if (signUpError) {
+                        if (signUpError.message.includes("already registered")) throw new Error("Cuenta existente. Usa Autorizar Acceso.");
+                        throw signUpError;
+                    }
+
+                    showStatus("Credenciales creadas. Redirigiendo...", false);
+                    localStorage.setItem('operador_email', emailInput);
+                    localStorage.setItem('operador_rol', userInWhitelist.rol); // Guardamos el rol al registrar
+                    
+                    setTimeout(() => window.location.href = 'dashboard.html', 1500);
+
+                } else {
+                    // LOGIN NORMAL
+                    const { data, error: loginError } = await _supabase.auth.signInWithPassword({
+                        email: emailInput, password: password
+                    });
+
+                    if (loginError) throw new Error("Credenciales inválidas o cuenta no registrada.");
+
+                    // EXTRAER ROL (Aquí estaba tu fallo original)
+                    const rolAsignado = await fetchUserRole(emailInput);
+
+                    // Verificar permisos
+                    if (rolAsignado !== 'admin' && rolAsignado !== 'gerente') {
+                        await _supabase.auth.signOut();
+                        throw new Error("Su cuenta no tiene privilegios administrativos.");
+                    }
+
+                    // GUARDAR VARIABLES DE SESIÓN
+                    localStorage.setItem('operador_email', emailInput);
+                    localStorage.setItem('operador_rol', rolAsignado);
+                    
+                    btn.innerHTML = `<i class="fa-solid fa-unlock"></i> ACCESO CONCEDIDO`;
+                    btn.classList.replace('bg-black', 'bg-green-600');
+                    setTimeout(() => window.location.href = 'dashboard.html', 800);
+                }
+
+            } catch (err) {
+                console.error(err);
+                showStatus(err.message);
+                btn.disabled = false;
+                btn.innerText = isRegisterMode ? "REGISTRAR CREDENCIALES →" : "AUTORIZAR ACCESO →";
+            }
+        }
+
+        async function loginWithGoogle() {
+            btn = document.getElementById('main-btn');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> REDIRIGIENDO...`;
+            const { error } = await _supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin + '/dashboard.html' }
+            });
+            if (error) {
+                showStatus(`Fallo SSO: ${error.message}`);
+                btn.innerText = "AUTORIZAR ACCESO →";
+            }
+        }
+
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAuth();
+        });
+    </script>
+</body>
+</html>

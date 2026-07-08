@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DETALLE SOLICITUD | Multiamerica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #ffffff; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .font-title { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; letter-spacing: -0.05em; }
+        .bg-grid { background-image: radial-gradient(circle, #f0f0f0 1px, transparent 1px); background-size: 30px 30px; }
+        .time-btn.active { border-color: #FF8801; color: #FF8801; background-color: #fffaf5; }
+        .day-btn.active { background-color: #FF8801; color: white; transform: scale(1.1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animación suave para la entrada de datos */
+        #detalle-container { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-grid min-h-screen p-4 md:p-12">
+
+    <main class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-12">
+            <button onclick="window.location.href='dashboard.html'" class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-black transition-colors">
+                ← Regresar a Central
+            </button>
+            <div id="status-badge" class="bg-orange-100 text-[#FF8801] px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">
+                Pendiente de Revisión
+            </div>
+        </header>
+
+        <div id="detalle-container" class="space-y-12">
+            <div class="animate-pulse flex flex-col gap-8">
+                <div class="h-20 bg-gray-100 rounded-3xl w-2/3"></div>
+                <div class="h-96 bg-gray-50 rounded-[50px]"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-cita" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-lg rounded-[50px] p-8 shadow-2xl my-8 relative">
+            <header class="text-center mb-8">
+                <h3 class="text-3xl font-title italic uppercase tracking-tighter">Agenda tu <span class="text-[#FF8801]">Visita</span></h3>
+                <p class="text-[9px] text-gray-400 uppercase tracking-[0.3em] mt-2 font-bold">Inspección física del vehículo</p>
+            </header>
+
+            <div class="mb-8">
+                <div class="grid grid-cols-7 text-center text-[9px] font-black text-gray-300 uppercase mb-4">
+                    <div>Dom</div><div>Lun</div><div>Mar</div><div>Mie</div><div>Jue</div><div>Vie</div><div>Sab</div>
+                </div>
+                <div id="calendar-days" class="grid grid-cols-7 gap-2 text-center"></div>
+            </div>
+
+            <div class="bg-gray-50 rounded-[40px] p-6 border border-gray-100">
+                <div class="grid grid-cols-3 gap-2 mb-4" id="time-grid">
+                    <button onclick="selectTime('08:00 AM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">08:00 AM</button>
+                    <button onclick="selectTime('10:00 AM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">10:00 AM</button>
+                    <button onclick="selectTime('12:00 PM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">12:00 PM</button>
+                    <button onclick="selectTime('02:00 PM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">02:00 PM</button>
+                    <button onclick="selectTime('04:00 PM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">04:00 PM</button>
+                </div>
+                <div class="text-center">
+                    <div class="inline-block bg-black text-white text-[10px] font-mono px-4 py-2 rounded-lg" id="final-selection">SELECCIONA DÍA Y HORA</div>
+                </div>
+            </div>
+
+            <button id="btn-confirmar" onclick="confirmarCitaFinal(event)" class="w-full bg-black text-white py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] mt-6 hover:bg-[#FF8801] transition-all shadow-xl">
+                Confirmar y Notificar
+            </button>
+            <button onclick="document.getElementById('modal-cita').classList.add('hidden')" class="w-full text-gray-300 text-[10px] font-bold uppercase mt-4 tracking-widest">Cerrar</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script> 
+    <script>
+        const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        const params = new URLSearchParams(window.location.search);
+        const solicitudId = params.get('id');
+        let carroData = null;
+        let selectedDay = null;
+        let selectedTime = null;
+        const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+        // Helper para construir URLs de imágenes desde Supabase Storage
+        function getFotoUrl(path) {
+            if (!path) return 'https://via.placeholder.com/800x600?text=Sin+Foto';
+            return path.startsWith('http') ? path : `${CONFIG.SUPABASE_URL}/storage/v1/object/public/autos/${path}`;
+        }
+
+        async function init() {
+            if(!solicitudId) { window.location.href = 'dashboard.html'; return; }
+            
+            try {
+                const { data, error } = await _supabase.from('consignaciones').select('*').eq('id', solicitudId).single();
+                if(error) throw error;
+                
+                carroData = data;
+                render(data);
+                initCalendar();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('detalle-container').innerHTML = `<div class="text-center py-20 font-black opacity-20 uppercase italic text-2xl">Solicitud no encontrada</div>`;
+            }
+        }
+
+        function render(c) {
+            const telLimpio = c.telefono ? String(c.telefono).replace(/\s+/g, '').replace('+', '') : "";
+
+            const fotosHtml = (c.fotos && c.fotos.length > 0) ? `
+                <div class="space-y-4">
+                    <div class="relative rounded-[40px] overflow-hidden shadow-2xl bg-gray-100 border border-gray-100">
+                        <img id="main-img-solicitud" src="${getFotoUrl(c.fotos[0])}" class="w-full aspect-[4/3] object-cover">
+                    </div>
+                    <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                        ${c.fotos.map(f => `
+                            <img src="${getFotoUrl(f)}" onclick="document.getElementById('main-img-solicitud').src='${getFotoUrl(f)}'" 
+                                class="w-24 h-20 rounded-2xl object-cover cursor-pointer hover:ring-2 ring-orange-500 transition-all opacity-70 hover:opacity-100">
+                        `).join('')}
+                    </div>
+                </div>
+            ` : `
+                <div class="h-96 bg-gray-50 rounded-[40px] flex items-center justify-center border-2 border-dashed border-gray-100">
+                    <p class="text-gray-300 font-black uppercase text-[10px] tracking-widest">El cliente no adjuntó fotos</p>
+                </div>
+            `;
+
+            document.getElementById('detalle-container').innerHTML = `
+                <section>
+                    <h1 class="text-5xl md:text-7xl font-title uppercase leading-[0.8] mb-6">${c.vehiculo}</h1>
+                    <div class="flex items-center gap-4">
+                        <span class="text-xl font-mono text-gray-400 uppercase">Año ${c.ano}</span>
+                        <div class="h-2 w-2 bg-gray-200 rounded-full"></div>
+                        <span class="text-3xl font-title text-[#FF8801] italic">${currency.format(c.precio)}</span>
+                    </div>
+                </section>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-12">
+                    ${fotosHtml}
+
+                    <div class="space-y-8">
+                        <div class="bg-gray-50 p-8 rounded-[40px] border border-gray-100">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-gray-300 block mb-4">Datos del Propietario</label>
+                            <h2 class="text-3xl font-black uppercase">${c.nombre}</h2>
+                            <p class="text-sm font-mono text-gray-400 mt-1">${c.telefono || 'Teléfono no registrado'}</p>
+                            ${telLimpio ? `<a href="https://wa.me/${telLimpio}" target="_blank" class="inline-block mt-4 text-[10px] font-bold text-[#FF8801] uppercase tracking-widest border-b-2 border-orange-100 hover:border-[#FF8801] transition-all">Chat Directo WhatsApp →</a>` : ''}
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-6 bg-white border border-gray-50 rounded-[30px] shadow-sm">
+                                <label class="text-[9px] font-black text-gray-300 uppercase block mb-1">Kilometraje</label>
+                                <p class="text-xl font-bold italic">${c.km?.toLocaleString() || 0} KM</p>
+                            </div>
+                            <div class="p-6 bg-white border border-gray-50 rounded-[30px] shadow-sm">
+                                <label class="text-[9px] font-black text-gray-300 uppercase block mb-1">Estatus</label>
+                                <p class="text-[11px] font-black uppercase text-[#FF8801]">${c.estatus}</p>
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-gray-50 rounded-[30px]">
+                            <label class="text-[9px] font-black text-gray-300 uppercase block mb-2">Comentarios / Detalles</label>
+                            <p class="text-sm text-gray-600 leading-relaxed">${c.detalles || 'Sin detalles adicionales proporcionados.'}</p>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row gap-4 mt-8">
+                            <button onclick="document.getElementById('modal-cita').classList.remove('hidden')" class="w-full md:w-1/2 bg-black text-white p-6 rounded-[30px] font-title italic text-lg uppercase hover:bg-[#FF8801] transition-all shadow-xl">
+                                📅 Agendar Cita
+                            </button>
+                            
+                            <button onclick="publicarEnShowroom()" class="w-full md:w-1/2 bg-[#25D366] text-white p-6 rounded-[30px] font-title italic text-lg uppercase hover:bg-green-500 transition-all shadow-xl">
+                                🌐 Publicar en Web
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // NUEVA FUNCIÓN: ENVIAR AL INVENTARIO WEB
+        // ==========================================
+        async function publicarEnShowroom() {
+            const confirmacion = confirm(`¿Estás seguro de publicar el ${carroData.vehiculo} directamente en el catálogo público?`);
+            if (!confirmacion) return;
+
+            try {
+                // Separamos "Jeep Wrangler" en Marca "Jeep" y Modelo "Wrangler"
+                const vehiculoParts = carroData.vehiculo.trim().split(' ');
+                const marca = vehiculoParts[0] || 'Por definir';
+                const modelo = vehiculoParts.slice(1).join(' ') || 'Por definir';
+
+                // Armamos el paquete para INVENTARIO
+                const payloadInventario = {
+                    marca: marca,
+                    modelo: modelo,
+                    anio: carroData.ano,
+                    precio_venta: carroData.precio,
+                    kilometraje: carroData.km,
+                    fotos: carroData.fotos || [],
+                    etiqueta: 'MARKETPLACE', // El flag clave para el frontend
+                    publicado_web: true,
+                    descripcion: `Vehículo gestionado a través de nuestro sistema de Consignación Segura. (Dueño Directo). ${carroData.detalles || ''}`,
+                    estatus: 'Disponible',
+                    transmision: 'Automática', // Valor por defecto seguro para no fallar en DB
+                    tipo: 'SUV' // Valor por defecto seguro
+                };
+
+                // Insertamos en el inventario
+                const { error: errorInventario } = await _supabase.from('inventario').insert([payloadInventario]);
+                if (errorInventario) throw errorInventario;
+
+                // Actualizamos estatus en consignaciones
+                const { error: errorUpdate } = await _supabase.from('consignaciones')
+                    .update({ estatus: 'Publicado en Web' })
+                    .eq('id', solicitudId);
+                    
+                if (errorUpdate) throw errorUpdate;
+
+                // Notificamos al cliente
+                if (carroData.telefono) {
+                    const tel = String(carroData.telefono).replace(/\s+/g, '').replace('+', '');
+                    const msg = encodeURIComponent(`¡Felicidades ${carroData.nombre}! 🎉 Tu ${carroData.vehiculo} ya ha sido aprobado y publicado oficialmente en el catálogo web de Multiamerica Vehiculos.`);
+                    window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+                } else {
+                    alert("✅ Vehículo publicado con éxito en el showroom.");
+                }
+
+                window.location.href = 'dashboard.html';
+
+            } catch (err) {
+                console.error("Error publicando:", err);
+                alert("Hubo un error al intentar publicar en inventario: " + (err.message || err.details));
+            }
+        }
+
+        // ==========================================
+        // LÓGICA DE CALENDARIO Y CITA
+        // ==========================================
+        function initCalendar() {
+            const container = document.getElementById('calendar-days');
+            container.innerHTML = '';
+            for(let i=0; i<5; i++) container.innerHTML += '<div></div>'; 
+            
+            for(let i=1; i<=31; i++) {
+                const btn = document.createElement('button');
+                btn.innerText = i;
+                btn.className = "day-btn p-3 text-[11px] font-bold rounded-xl transition-all hover:bg-orange-50";
+                btn.onclick = (e) => {
+                    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    selectedDay = `Mayo ${i}, 2026`;
+                    updateDisplay();
+                };
+                container.appendChild(btn);
+            }
+        }
+
+        function selectTime(time, btn) {
+            selectedTime = time;
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const out = document.getElementById('final-selection');
+            if(selectedDay && selectedTime) out.innerText = `${selectedDay.toUpperCase()} @ ${selectedTime}`;
+        }
+
+        async function confirmarCitaFinal(e) {
+            if(!selectedDay || !selectedTime) return alert("⚠️ Debes seleccionar día y hora para la cita.");
+            
+            const btn = e.target;
+            btn.disabled = true;
+            btn.innerText = "PROCESANDO...";
+            const fechaCita = `${selectedDay} @ ${selectedTime}`;
+
+            try {
+                const { error } = await _supabase.from('consignaciones')
+                    .update({ estatus: 'Aprobado', fecha_cita: fechaCita })
+                    .eq('id', solicitudId);
+
+                if (error) throw error;
+
+                if (carroData.telefono) {
+                    const tel = String(carroData.telefono).replace(/\s+/g, '').replace('+', '');
+                    const msg = encodeURIComponent(`¡Hola ${carroData.nombre}! Tu solicitud para el ${carroData.vehiculo} ha sido APROBADA. ✅\n\nTe esperamos para la inspección física:\n📅 Fecha: ${fechaCita}.\n📍 Lugar: Concesionario Multiamerica.`);
+                    window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+                }
+
+                alert("✅ Solicitud aprobada y cita agendada.");
+                window.location.href = 'dashboard.html';
+
+            } catch (err) {
+                alert("Error al confirmar: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "Confirmar y Notificar";
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

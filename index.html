@@ -134,11 +134,12 @@
 
         function hideStatus() { document.getElementById('status-msg').classList.add('hidden'); }
 
-        // Función para extraer el rol de la Whitelist
+        // Función para extraer el rol de la Whitelist (via RPC segura,
+        // la tabla whitelist ya no es legible directamente por el cliente)
         async function fetchUserRole(email) {
-            const { data, error } = await _supabase.from('whitelist').select('rol').eq('email', email).maybeSingle();
+            const { data, error } = await _supabase.rpc('check_whitelist', { p_email: email });
             if (error || !data) return 'vendedor'; // Default si no está o hay error
-            return data.rol;
+            return data;
         }
 
         async function handleAuth() {
@@ -157,12 +158,12 @@
 
             try {
                 if (isRegisterMode) {
-                    // VALIDACIÓN DE WHITELIST
-                    const { data: userInWhitelist, error: whitelistError } = await _supabase
-                        .from('whitelist').select('rol').eq('email', emailInput).maybeSingle();
+                    // VALIDACIÓN DE WHITELIST (via RPC segura)
+                    const { data: rolWhitelist, error: whitelistError } = await _supabase
+                        .rpc('check_whitelist', { p_email: emailInput });
 
                     if (whitelistError) throw new Error("Fallo al contactar el servidor de seguridad.");
-                    if (!userInWhitelist) throw new Error("Acceso Denegado: Correo no está en la Whitelist.");
+                    if (!rolWhitelist) throw new Error("Acceso Denegado: Correo no está en la Whitelist.");
 
                     // REGISTRO
                     const { data: authData, error: signUpError } = await _supabase.auth.signUp({
@@ -176,7 +177,7 @@
 
                     showStatus("Credenciales creadas. Redirigiendo...", false);
                     localStorage.setItem('operador_email', emailInput);
-                    localStorage.setItem('operador_rol', userInWhitelist.rol); // Guardamos el rol al registrar
+                    localStorage.setItem('operador_rol', rolWhitelist); // Guardamos el rol al registrar
                     
                     setTimeout(() => window.location.href = 'dashboard.html', 1500);
 

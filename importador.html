@@ -146,7 +146,8 @@
                             transmision: limpiarTexto(obtenerValor(['TRANSMISIÓN', 'TRANSMISION'])),
                             detalles: limpiarTexto(obtenerValor(['DETALLES'])),
                             precio_venta: limpiarNumero(obtenerValor(['PRECIO'])),
-                            estatus: 'DISPONIBLE'
+                            estatus: 'DISPONIBLE',
+                            publicado_web: true
                         };
                     }).filter(u => u.marca && u.modelo); // Ignorar filas vacías
 

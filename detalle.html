@@ -142,6 +142,7 @@
 
         function getFotoUrl(path) {
             if (!path) return 'https://via.placeholder.com/800?text=MULTIAMERICA';
+            if (path.startsWith('http')) return path;
             return _supabase.storage.from('autos').getPublicUrl(path).data.publicUrl;
         }
 

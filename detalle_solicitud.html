@@ -193,13 +193,16 @@
                 const modelo = vehiculoParts.slice(1).join(' ') || 'Por definir';
 
                 // Armamos el paquete para INVENTARIO
+                // Normalizamos las fotos a URL pública completa (consignaciones guarda paths).
+                const fotosInventario = (carroData.fotos || []).map(f => getFotoUrl(f));
+
                 const payloadInventario = {
                     marca: marca,
                     modelo: modelo,
                     anio: carroData.ano,
                     precio_venta: carroData.precio,
                     kilometraje: carroData.km,
-                    fotos: carroData.fotos || [],
+                    fotos: fotosInventario,
                     etiqueta: 'MARKETPLACE', // El flag clave para el frontend
                     publicado_web: true,
                     descripcion: `Vehículo gestionado a través de nuestro sistema de Consignación Segura. (Dueño Directo). ${carroData.detalles || ''}`,

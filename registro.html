@@ -153,9 +153,12 @@
             if (u.tipo) document.getElementById('type').value = u.tipo; // Carga el tipo existente
 
             if (u.fotos && u.fotos.length > 0) {
-                u.fotos.forEach(path => {
-                    const { data } = _supabase.storage.from('autos').getPublicUrl(path);
-                    listaDeFotos.push({ file: null, url: data.publicUrl, isNew: false, path: path });
+                u.fotos.forEach(entry => {
+                    // Soporta tanto URLs completas (formato nuevo) como paths viejos (formato legacy).
+                    const publicUrl = entry.startsWith('http')
+                        ? entry
+                        : _supabase.storage.from('autos').getPublicUrl(entry).data.publicUrl;
+                    listaDeFotos.push({ file: null, url: publicUrl, isNew: false, path: publicUrl });
                 });
                 renderizarPreviews();
             }
@@ -234,9 +237,13 @@
                         const name = `${Date.now()}_${i}.png`;
                         const { data, error } = await _supabase.storage.from('autos').upload(name, foto.file);
                         if (error) throw error;
-                        pathsFinales.push(data.path);
+                        // Guardamos la URL pública completa (no solo el path) para que
+                        // la web y el resto de las vistas la carguen directo, sin
+                        // tener que reconstruirla.
+                        const { data: urlData } = _supabase.storage.from('autos').getPublicUrl(data.path);
+                        pathsFinales.push(urlData.publicUrl);
                     } else {
-                        pathsFinales.push(foto.path);
+                        pathsFinales.push(foto.path); // ya es URL completa (ver prepararFormulario)
                     }
                 }
 

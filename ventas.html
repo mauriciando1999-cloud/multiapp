@@ -98,6 +98,7 @@
             if (!data || data.length === 0) return 'https://placehold.co/800x600?text=VENDIDO';
             let path = Array.isArray(data) ? data[0] : data;
             path = path.replace(/['"\[\]{}]/g, '').trim();
+            if (path.startsWith('http')) return path;
             const { data: urlData } = _supabase.storage.from('autos').getPublicUrl(path);
             return urlData.publicUrl;
         }

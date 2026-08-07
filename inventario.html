@@ -125,7 +125,10 @@
             }
 
             grid.innerHTML = unidades.map(u => {
-                const img = u.fotos?.length ? _supabase.storage.from('autos').getPublicUrl(u.fotos[0]).data.publicUrl : 'https://placehold.co/800x600/eeeeee/999999?text=Sin+Foto';
+                const primeraFoto = u.fotos?.[0];
+                const img = primeraFoto
+                    ? (primeraFoto.startsWith('http') ? primeraFoto : _supabase.storage.from('autos').getPublicUrl(primeraFoto).data.publicUrl)
+                    : 'https://placehold.co/800x600/eeeeee/999999?text=Sin+Foto';
                 return `
                 <div class="car-card glass-card overflow-hidden transition-all duration-500 bg-white shadow-sm">
                     <div class="h-64 overflow-hidden"><img src="${img}" class="w-full h-full object-cover"></div>

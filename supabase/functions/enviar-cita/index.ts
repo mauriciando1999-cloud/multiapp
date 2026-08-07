@@ -16,16 +16,37 @@ serve(async (req) => {
   }
 
   try {
-    const { email, nombre, tipo, detalles } = await req.json()
-    
-    const fechaCita = detalles?.fecha || "A convenir";
-    const horaCita = detalles?.hora || "A convenir";
-    const lugarCita = detalles?.lugar || "Sede Principal Multiamerica, Caracas";
-
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Solo personal interno (whitelist) puede disparar citas/correos.
+    const jwt = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
+    const { data: userData, error: userError } = await supabase.auth.getUser(jwt);
+    if (userError || !userData?.user?.email) {
+      return new Response(JSON.stringify({ error: 'No autenticado.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+    const { data: whitelistRow } = await supabase
+      .from('whitelist')
+      .select('rol')
+      .ilike('email', userData.user.email)
+      .maybeSingle();
+    if (!whitelistRow) {
+      return new Response(JSON.stringify({ error: 'Acceso denegado.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      });
+    }
+
+    const { email, nombre, tipo, detalles } = await req.json()
+
+    const fechaCita = detalles?.fecha || "A convenir";
+    const horaCita = detalles?.hora || "A convenir";
+    const lugarCita = detalles?.lugar || "Sede Principal Multiamerica, Caracas";
 
     const { error: dbError } = await supabase
       .from('calendario_entrevistas')

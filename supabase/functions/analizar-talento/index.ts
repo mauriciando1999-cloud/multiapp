@@ -79,6 +79,14 @@ async function procesarPostulante(record: any, supabase: any, models: string[]) 
 
 Deno.serve(async (req) => {
   try {
+    // Esta función solo la debe llamar el Database Webhook de Supabase
+    // (configurado con el header Authorization: Bearer <service_role key>).
+    // Cualquier otro caller queda bloqueado, aunque tenga sesión válida.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (authHeader !== `Bearer ${SB_SERVICE_ROLE}`) {
+      return new Response("No autorizado", { status: 401 });
+    }
+
     const { record } = await req.json();
     const supabase = createClient(SB_URL, SB_SERVICE_ROLE);
 

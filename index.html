@@ -220,13 +220,38 @@
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> REDIRIGIENDO...`;
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: 'google',
-                options: { redirectTo: window.location.origin + '/dashboard.html' }
+                // Vuelve a esta misma página: acá abajo se valida la whitelist
+                // antes de dejar pasar a dashboard.html (Google por sí solo
+                // NO da acceso, solo crea la sesión).
+                options: { redirectTo: window.location.origin + '/index.html' }
             });
             if (error) {
                 showStatus(`Fallo SSO: ${error.message}`);
                 btn.innerText = "AUTORIZAR ACCESO →";
             }
         }
+
+        // Se ejecuta al volver de un login OAuth (Google). Si hay sesión activa
+        // pero el correo no está en la whitelist con rol admin/gerente, se cierra
+        // la sesión de inmediato: el acceso real lo decide siempre la whitelist,
+        // nunca el solo hecho de tener una cuenta de Google.
+        async function validarSesionOAuth() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) return;
+
+            const rolAsignado = await fetchUserRole(session.user.email);
+            if (rolAsignado !== 'admin' && rolAsignado !== 'gerente') {
+                await _supabase.auth.signOut();
+                showStatus("Acceso Denegado: tu cuenta de Google no tiene privilegios administrativos.");
+                return;
+            }
+
+            localStorage.setItem('operador_email', session.user.email);
+            localStorage.setItem('operador_rol', rolAsignado);
+            window.location.href = 'dashboard.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', validarSesionOAuth);
 
         document.getElementById('password').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleAuth();

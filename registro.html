@@ -287,10 +287,14 @@
             reader.onload = async () => {
                 const base64Data = reader.result.split(',')[1];
                 try {
+                    const { data: sesion } = await _supabase.auth.getSession();
                     const response = await fetch('/api/gemini', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${sesion?.session?.access_token || ''}`
+                        },
+                        body: JSON.stringify({
                             // IA ACTUALIZADA PARA PREDECIR EL TIPO DE VEHÍCULO
                             prompt: 'Responde solo JSON con marca, modelo, anio, color, y tipo (El tipo debe ser estrictamente uno de estos: SUV, Sedan, Pickup, Deportivo, Hatchback, Van).',
                             image: base64Data,

@@ -1,4 +1,11 @@
 const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
+function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
 let chartInstance = null;
 let todosLosPostulantes = [];
 let pActivo = null;
@@ -68,11 +75,11 @@ function buildCardsHTML(arr) {
             <div class="checkbox-custom ${isChecked}" onclick="toggleSeleccion(event, '${p.id}')"></div>
             <div class="flex-1 overflow-hidden cursor-pointer flex items-center gap-3" onclick="abrirModalExpediente('${p.id}')">
                 <div class="w-10 h-10 rounded-xl bg-gray-50 text-gray-700 flex items-center justify-center font-title italic uppercase border border-gray-200">
-                    ${p.nombre[0]}${p.apellido ? p.apellido[0] : ''}
+                    ${escapeHtml(p.nombre[0])}${p.apellido ? escapeHtml(p.apellido[0]) : ''}
                 </div>
                 <div class="flex-1 overflow-hidden">
-                    <h3 class="font-black text-[10px] uppercase tracking-tighter truncate">${p.nombre} ${p.apellido || ''}</h3>
-                    <p class="text-[8px] text-gray-400 font-bold uppercase truncate">${p.experiencia_declarada || 'Sin Exp.'}</p>
+                    <h3 class="font-black text-[10px] uppercase tracking-tighter truncate">${escapeHtml(p.nombre)} ${escapeHtml(p.apellido || '')}</h3>
+                    <p class="text-[8px] text-gray-400 font-bold uppercase truncate">${escapeHtml(p.experiencia_declarada || 'Sin Exp.')}</p>
                 </div>
                 <div class="w-2 h-2 rounded-full flex-shrink-0 ${colorPunto}"></div>
             </div>

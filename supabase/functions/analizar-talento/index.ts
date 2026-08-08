@@ -4,6 +4,9 @@ import { encodeBase64 } from 'https://deno.land/std@0.224.0/encoding/base64.ts'
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')!;
 const SB_URL = Deno.env.get('SUPABASE_URL')!;
 const SB_SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+// Secreto propio para el webhook, independiente de la service_role key
+// (esa se rota/cambia de formato y desincroniza el header del trigger).
+const WEBHOOK_SECRET = Deno.env.get('ANALIZAR_TALENTO_WEBHOOK_SECRET')!;
 
 const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -83,7 +86,7 @@ Deno.serve(async (req) => {
     // (configurado con el header Authorization: Bearer <service_role key>).
     // Cualquier otro caller queda bloqueado, aunque tenga sesión válida.
     const authHeader = req.headers.get('Authorization') ?? '';
-    if (authHeader !== `Bearer ${SB_SERVICE_ROLE}`) {
+    if (authHeader !== `Bearer ${WEBHOOK_SECRET}`) {
       return new Response("No autorizado", { status: 401 });
     }
 

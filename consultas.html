@@ -85,7 +85,14 @@
             cont.innerHTML = datos.map(l => {
                 const esCita = l.tipo === 'Cita';
                 const badgeColor = l.estatus === 'Contactado' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
-                const waLink = l.cliente_telefono ? `https://wa.me/${l.cliente_telefono.replace(/\D/g, '')}` : null;
+                const listaAutos = (l.vehiculos || []).join(', ') || 'tu selección';
+                const nombreGerente = (l.gerente_nombre || '').split(' ')[0] || 'un asesor';
+                const mensajeWa = esCita
+                    ? `¡Hola ${l.cliente_nombre || ''}! Soy ${nombreGerente} de Multiamerica, te escribo para confirmar tu cita del ${l.fecha_hora || ''} ${l.ubicacion ? 'en ' + l.ubicacion : ''} por: ${listaAutos}.`
+                    : `¡Hola ${l.cliente_nombre || ''}! Soy ${nombreGerente} de Multiamerica, vi que consultaste por: ${listaAutos}. ¿Conversamos?`;
+                const waLink = l.cliente_telefono
+                    ? `https://wa.me/${l.cliente_telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensajeWa)}`
+                    : null;
 
                 return `
                 <div class="bento-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">

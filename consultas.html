@@ -64,7 +64,8 @@
     <script src="config.js"></script>
     <script>
         const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-        if (!localStorage.getItem('operador_email')) { window.location.href = 'index.html'; }
+        const uEmail = localStorage.getItem('operador_email');
+        if (!uEmail) { window.location.href = 'index.html'; }
 
         function escapeHtml(str) {
             return String(str ?? '').replace(/[&<>"']/g, (c) => ({
@@ -76,6 +77,15 @@
         let filtroActual = 'todos';
         let vehiculosPorId = {};
         let leadsConVenta = new Set();
+        // Nombre de quien esta operando la sesion, no el gerente al que el
+        // lead se le asigno al azar en la web publica: el mensaje debe
+        // presentarse con el nombre de quien realmente escribe.
+        let miNombre = null;
+
+        async function cargarMiNombre() {
+            const { data } = await _supabase.from('vendedores').select('nombre').eq('email', uEmail).maybeSingle();
+            miNombre = data?.nombre || null;
+        }
 
         async function cargarLeads() {
             const { data, error } = await _supabase
@@ -175,23 +185,31 @@
 
         function construirMensajeWa(l) {
             const esCita = l.tipo === 'Cita';
-            const nombreGerente = (l.gerente_nombre || '').split(' ')[0] || 'un asesor';
+            const nombreGerente = (miNombre || l.gerente_nombre || '').split(' ')[0] || 'un asesor';
             const listaAutos = (l.vehiculos || []).join(', ') || 'tu selección';
             return esCita
                 ? `¡Hola ${l.cliente_nombre || ''}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nTe escribo para confirmar tu cita del *${l.fecha_hora || ''}*${l.ubicacion ? ` en ${l.ubicacion}` : ''} por:\n🚗 ${listaAutos}\n\n¿Confirmamos?`
                 : `¡Hola ${l.cliente_nombre || ''}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nVi que consultaste por:\n🚗 ${listaAutos}\n\n¿Conversamos? Estoy para ayudarte.`;
         }
 
-        // Abre WhatsApp, genera el PDF con la ficha de los vehículos
-        // solicitados y marca el lead como contactado.
+        // Genera el PDF con la ficha de los vehículos solicitados, abre
+        // WhatsApp y marca el lead como contactado. El PDF va PRIMERO:
+        // wa.me suele saltar directo a la app de WhatsApp en el celular,
+        // lo que le quita el foco a la pestaña antes de que termine la
+        // descarga si se dispara después.
         function contactarLead(id) {
             const lead = todosLosLeads.find(l => l.id === id);
             if (!lead || !lead.cliente_telefono) return;
 
+            try {
+                generarPdfSolicitud(lead);
+            } catch (e) {
+                console.error('Error generando PDF de solicitud:', e);
+                alert('No se pudo generar el PDF de la solicitud: ' + e.message);
+            }
+
             const mensajeWa = construirMensajeWa(lead);
             window.open(`https://wa.me/${lead.cliente_telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensajeWa)}`, '_blank');
-
-            try { generarPdfSolicitud(lead); } catch (e) { console.error('Error generando PDF de solicitud:', e); }
 
             if (lead.estatus !== 'Contactado') marcarContactado(id);
         }
@@ -222,7 +240,7 @@
                 `Tipo: ${lead.tipo || 'Consulta'}`,
                 lead.fecha_hora ? `Fecha/Hora: ${lead.fecha_hora}` : null,
                 lead.ubicacion ? `Ubicación: ${lead.ubicacion}` : null,
-                `Asesor: ${lead.gerente_nombre || 'Sin asignar'}`
+                `Asesor: ${miNombre || lead.gerente_nombre || 'Sin asignar'}`
             ].filter(Boolean);
             doc.text(infoCliente, 40, startY + 20);
 
@@ -260,6 +278,7 @@
             doc.save(nombreArchivo);
         }
 
+        cargarMiNombre();
         cargarLeads();
     </script>
     <script>

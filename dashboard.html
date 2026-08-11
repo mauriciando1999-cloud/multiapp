@@ -182,6 +182,7 @@
         const uEmail = localStorage.getItem('operador_email');
         const uRol = localStorage.getItem('operador_rol');
         const uSlug = localStorage.getItem('vendedor_slug');
+        let miNombre = null;
 
         async function init() {
             if (!uEmail) { window.location.href = 'index.html'; return; }
@@ -191,6 +192,7 @@
             document.getElementById('rol-tag').innerText = uRol === 'admin' ? 'SYSTEM ADMINISTRATOR' : `GERENTE DE EQUIPO`;
 
             cargarMetricas();
+            await cargarMiNombre();
             cargarLeadsPreview();
 
             if (uRol === 'gerente') {
@@ -294,10 +296,15 @@
             }[c]));
         }
 
+        async function cargarMiNombre() {
+            const { data } = await _supabase.from('vendedores').select('nombre').eq('email', uEmail).maybeSingle();
+            miNombre = data?.nombre || null;
+        }
+
         function construirMensajeWa(l) {
             const esCita = l.tipo === 'Cita';
             const nombre = l.cliente_nombre || '';
-            const nombreGerente = (l.gerente_nombre || '').split(' ')[0] || 'un asesor';
+            const nombreGerente = (miNombre || l.gerente_nombre || '').split(' ')[0] || 'un asesor';
             const listaAutos = (l.vehiculos || []).join(', ') || 'tu selección';
 
             if (esCita) {

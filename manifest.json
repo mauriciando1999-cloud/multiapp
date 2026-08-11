@@ -1,15 +1,25 @@
 {
-  "name": "Multiamerica Comando",
-  "short_name": "Multiamerica",
-  "start_url": "index.html",
-  "display": "standalone", 
-  "background_color": "#050505",
-  "theme_color": "#D32F2F",
+  "name": "Multiamerica Central",
+  "short_name": "Central",
+  "description": "Panel operativo de Multiamerica: inventario, ventas, leads y equipo.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#e7e8ee",
+  "theme_color": "#FF8801",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

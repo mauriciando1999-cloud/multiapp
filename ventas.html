@@ -54,6 +54,12 @@
             color: var(--neu-text-muted);
         }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF8801">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Central">
 </head>
 <body class="p-3 sm:p-6 md:p-12">
 
@@ -168,6 +174,11 @@
         }
 
         cargarVentas();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.error));
+        }
     </script>
 </body>
 </html>

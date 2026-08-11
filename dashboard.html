@@ -68,6 +68,12 @@
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 136, 1, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 136, 1, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 136, 1, 0); } }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF8801">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Central">
 </head>
 <body class="min-h-screen pb-12">
 
@@ -345,6 +351,11 @@
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
         document.addEventListener('DOMContentLoaded', init);
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.error));
+        }
     </script>
 </body>
 </html>

@@ -51,6 +51,12 @@
         .btn-primary:disabled { background: #cccccc; cursor: not-allowed; transform: none; }
         .btn-primary:active:not(:disabled) { transform: scale(0.98); }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF8801">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Central">
 </head>
 <body class="min-h-screen flex items-center justify-center p-6">
 
@@ -173,6 +179,11 @@
         document.getElementById('password').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleAuth();
         });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.error));
+        }
     </script>
 </body>
 </html>

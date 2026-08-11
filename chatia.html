@@ -33,6 +33,12 @@
         .msg-ia { background: var(--neu-bg); border-radius: 20px 20px 20px 4px; box-shadow: 4px 4px 10px var(--neu-dark), -4px -4px 10px var(--neu-light); }
         .msg-user { background-color: #ff8801; color: white; border-radius: 20px 20px 4px 20px; box-shadow: 0 4px 15px rgba(255,136,1,0.2); }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF8801">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Central">
 </head>
 <body>
 
@@ -182,6 +188,11 @@
                 enviarMensaje();
             }
         });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.error));
+        }
     </script>
 </body>
 </html>

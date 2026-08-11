@@ -34,6 +34,12 @@
         .drop-zone { transition: all 0.3s ease; }
         .drop-zone.dragover { box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF8801">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Central">
 </head>
 <body class="pb-20 p-3 sm:p-6 md:p-8">
 
@@ -210,6 +216,11 @@
                 btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Reintentar`;
                 btn.disabled = false;
             }
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.error));
         }
     </script>
 </body>

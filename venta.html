@@ -67,6 +67,12 @@
         .upload-panel { transition: max-height 0.4s ease-out, opacity 0.4s ease-out; overflow: hidden; max-height: 0; opacity: 0; }
         .upload-panel.open { max-height: 500px; opacity: 1; }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF8801">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Central">
 </head>
 
 <body class="min-h-screen p-3 sm:p-4 md:p-8 flex items-start md:items-center justify-center">
@@ -305,6 +311,11 @@
         };
 
         init();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.error));
+        }
     </script>
 </body>
 </html>

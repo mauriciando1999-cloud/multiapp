@@ -8,8 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Montserrat:ital,wght@1,900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="config.js"></script>
@@ -69,14 +67,6 @@
         ::-webkit-scrollbar-thumb { background: var(--neu-dark); border-radius: 4px; }
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 136, 1, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 136, 1, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 136, 1, 0); } }
-
-        /* Ajustes estructurales de FullCalendar */
-        .fc .fc-toolbar-title { font-size: 1rem !important; font-family: 'Montserrat', sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; color: var(--neu-text); }
-        .fc .fc-button-primary { background: var(--neu-accent) !important; border: none !important; border-radius: 10px !important; text-transform: uppercase; font-size: 10px !important; font-weight: bold; box-shadow: 3px 3px 6px var(--neu-dark); }
-        .fc-theme-standard th { border-color: rgba(0,0,0,0.05); padding: 6px 0; font-size: 9px; text-transform: uppercase; color: var(--neu-text-muted); }
-        .fc-theme-standard td { border-color: rgba(0,0,0,0.05); }
-        .fc-daygrid-day-number, .fc-list-event-time, .fc-list-day-text, .fc-list-day-side-text { color: var(--neu-text) !important; }
-        .fc-list-event:hover td { background: rgba(0,0,0,0.03) !important; }
     </style>
 </head>
 <body class="min-h-screen pb-12">
@@ -116,30 +106,6 @@
                     </div>
                 </div>
 
-                <div id="seccion-admin" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                    <div class="neu-card p-4 sm:p-6 flex flex-col h-[300px] sm:h-[350px]">
-                        <div class="flex justify-between items-center mb-4 pb-2 border-b border-black/5">
-                            <h2 class="text-lg sm:text-xl font-title italic uppercase">Revisiones</h2>
-                            <span class="text-[8px] sm:text-[9px] font-black uppercase text-muted">Consignaciones</span>
-                        </div>
-                        <div id="lista-solicitudes" class="space-y-3 overflow-y-auto flex-1 pr-1 sm:pr-2">
-                            <p class="text-xs text-muted font-mono animate-pulse">Sincronizando...</p>
-                        </div>
-                    </div>
-
-                    <div class="neu-card p-4 sm:p-6 flex flex-col h-[300px] sm:h-[350px] relative group">
-                        <div class="flex justify-between items-center mb-4 pb-2 border-b border-black/5">
-                            <h2 class="text-lg sm:text-xl font-title italic uppercase text-blue-600">Talento IA</h2>
-                            <a href="admin_postulantes.html" class="text-[8px] sm:text-[9px] font-black uppercase text-blue-500 hover:text-[#FF8801] transition-colors flex items-center gap-1">
-                                Ver Todos <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
-                        <div id="lista-postulantes" class="space-y-3 overflow-y-auto flex-1 pr-1 sm:pr-2">
-                            <p class="text-xs text-muted font-mono animate-pulse">Sincronizando...</p>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                     <a href="inventario.html" class="neu-card-sm neu-pressable p-4 sm:p-6 flex flex-col items-center justify-center text-center">
                         <div class="w-10 h-10 sm:w-12 sm:h-12 neu-icon-plate flex items-center justify-center mb-3 text-black"><i class="fa-solid fa-warehouse"></i></div>
@@ -165,10 +131,41 @@
                 </a>
             </div>
 
-            <div id="columna-agenda" class="lg:col-span-4 flex flex-col">
-                <div class="neu-card p-4 sm:p-6 flex-1 min-h-[380px] sm:min-h-[500px]">
-                    <h2 class="text-lg sm:text-xl font-title italic uppercase mb-4 text-center pb-2 border-b border-black/5">Agenda</h2>
-                    <div id="calendar" class="w-full"></div>
+            <div id="columna-leads" class="lg:col-span-4 flex flex-col">
+                <div class="neu-card p-4 sm:p-6 flex-1 min-h-[380px] sm:min-h-[500px] flex flex-col">
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-black/5">
+                        <h2 class="text-lg sm:text-xl font-title italic uppercase text-[#FF8801]">Leads</h2>
+                        <a href="consultas.html" class="text-[8px] sm:text-[9px] font-black uppercase text-muted hover:text-[#FF8801] transition-colors flex items-center gap-1">
+                            Ver Todos <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div id="lista-leads-preview" class="space-y-3 overflow-y-auto flex-1 pr-1 sm:pr-2">
+                        <p class="text-xs text-muted font-mono animate-pulse">Sincronizando...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="seccion-admin" class="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div class="neu-card p-4 sm:p-6 flex flex-col h-[300px] sm:h-[350px]">
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-black/5">
+                        <h2 class="text-lg sm:text-xl font-title italic uppercase">Revisiones</h2>
+                        <span class="text-[8px] sm:text-[9px] font-black uppercase text-muted">Consignaciones</span>
+                    </div>
+                    <div id="lista-solicitudes" class="space-y-3 overflow-y-auto flex-1 pr-1 sm:pr-2">
+                        <p class="text-xs text-muted font-mono animate-pulse">Sincronizando...</p>
+                    </div>
+                </div>
+
+                <div class="neu-card p-4 sm:p-6 flex flex-col h-[300px] sm:h-[350px] relative group">
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-black/5">
+                        <h2 class="text-lg sm:text-xl font-title italic uppercase text-blue-600">Talento IA</h2>
+                        <a href="admin_postulantes.html" class="text-[8px] sm:text-[9px] font-black uppercase text-blue-500 hover:text-[#FF8801] transition-colors flex items-center gap-1">
+                            Ver Todos <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div id="lista-postulantes" class="space-y-3 overflow-y-auto flex-1 pr-1 sm:pr-2">
+                        <p class="text-xs text-muted font-mono animate-pulse">Sincronizando...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -188,18 +185,16 @@
             document.getElementById('rol-tag').innerText = uRol === 'admin' ? 'SYSTEM ADMINISTRATOR' : `GERENTE DE EQUIPO`;
 
             cargarMetricas();
+            cargarLeadsPreview();
 
             if (uRol === 'gerente') {
                 document.getElementById('seccion-admin')?.remove();
-                document.getElementById('columna-agenda')?.remove();
                 document.getElementById('btn-analisis')?.remove();
-                document.getElementById('panel-operativo').classList.replace('lg:col-span-8', 'lg:col-span-12');
                 document.getElementById('titulo-central').innerText = 'GESTIÓN.';
                 document.getElementById('status-tag').innerText = 'Panel Privado';
             } else {
                 await cargarRevisiones();
                 await cargarTalentos();
-                initCalendar();
             }
         }
 
@@ -287,37 +282,64 @@
             }
         }
 
-        async function initCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            if (!calendarEl || typeof FullCalendar === 'undefined') return;
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, (c) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
 
-            let eventos = [];
+        function construirMensajeWa(l) {
+            const esCita = l.tipo === 'Cita';
+            const nombre = l.cliente_nombre || '';
+            const nombreGerente = (l.gerente_nombre || '').split(' ')[0] || 'un asesor';
+            const listaAutos = (l.vehiculos || []).join(', ') || 'tu selección';
+
+            if (esCita) {
+                return `¡Hola ${nombre}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nTe escribo para confirmar tu cita del *${l.fecha_hora || ''}*${l.ubicacion ? ` en ${l.ubicacion}` : ''} por:\n🚗 ${listaAutos}\n\n¿Confirmamos?`;
+            }
+            return `¡Hola ${nombre}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nVi que consultaste por:\n🚗 ${listaAutos}\n\n¿Conversamos? Estoy para ayudarte.`;
+        }
+
+        async function cargarLeadsPreview() {
+            const container = document.getElementById('lista-leads-preview');
+            if (!container) return;
             try {
-                const { data, error } = await _supabase.from('calendario_entrevistas').select('*');
-                if (!error && data) {
-                    eventos = data.map(cita => ({
-                        id: cita.id,
-                        title: `${cita.prospecto_nombre} (${cita.tipo_entrevista || 'Entrevista'})`,
-                        start: cita.fecha_hora,
-                        backgroundColor: '#000000',
-                        borderColor: '#FF8801',
-                        textColor: '#ffffff'
-                    }));
+                let q = _supabase.from('consultas_showroom').select('*').eq('estatus', 'Pendiente').order('creado_el', { ascending: false }).limit(5);
+                if (uRol === 'gerente') q = q.eq('gerente_email', uEmail);
+
+                const { data, error } = await q;
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p class="text-xs text-muted font-bold mt-10 text-center uppercase">Sin Leads Pendientes</p>';
+                    return;
                 }
-            } catch(e) { console.error("Error extrayendo agenda", e); }
 
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth',
-                contentHeight: 'auto',
-                locale: 'es',
-                headerToolbar: { left: 'prev,next', center: 'title', right: 'today' },
-                buttonText: { today: 'Hoy' },
-                events: eventos
-            });
+                container.innerHTML = data.map(l => {
+                    const mensajeWa = construirMensajeWa(l);
+                    const waLink = l.cliente_telefono
+                        ? `https://wa.me/${l.cliente_telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensajeWa)}`
+                        : null;
+                    return `
+                    <div class="neu-inset p-3 sm:p-4 flex justify-between items-center gap-2">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 neu-icon-plate flex items-center justify-center text-[#FF8801] text-xs flex-shrink-0"><i class="fa-solid fa-headset"></i></div>
+                            <div class="min-w-0">
+                                <p class="text-[10px] sm:text-[11px] font-black uppercase leading-tight truncate">${escapeHtml(l.cliente_nombre) || 'Sin nombre'}</p>
+                                <p class="text-[8px] sm:text-[9px] text-muted font-bold mt-1 truncate">${escapeHtml((l.vehiculos || []).join(', ')) || 'Sin vehículos'}</p>
+                            </div>
+                        </div>
+                        ${waLink ? `<a href="${waLink}" target="_blank" onclick="marcarContactadoPreview('${l.id}')" class="neu-card-sm neu-pressable bg-[#25D366] text-white w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full flex-shrink-0"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<p class="text-[10px] text-red-500">Error: ${e.message}</p>`;
+            }
+        }
 
-            calendar.render();
-            // Corrección de tamaño para contenedores Flex de Tailwind
-            setTimeout(() => calendar.updateSize(), 300);
+        async function marcarContactadoPreview(id) {
+            await _supabase.from('consultas_showroom').update({ estatus: 'Contactado' }).eq('id', id);
+            cargarLeadsPreview();
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }

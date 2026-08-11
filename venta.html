@@ -125,7 +125,8 @@
                 </div>
                 <div>
                     <label>WhatsApp de Contacto</label>
-                    <input type="tel" id="telefono" placeholder="04XXXXXXXXX" required class="font-bold">
+                    <input type="tel" id="telefono" placeholder="04XXXXXXXXX" required class="font-bold" oninput="buscarLeadCoincidente()">
+                    <p id="lead-match-badge" class="hidden mt-2 text-[10px] font-black uppercase text-green-600 flex items-center gap-1.5"></p>
                 </div>
             </div>
 
@@ -204,6 +205,37 @@
             }
         }
 
+        let debounceLeadMatch = null;
+        function buscarLeadCoincidente() {
+            clearTimeout(debounceLeadMatch);
+            const badge = document.getElementById('lead-match-badge');
+            const telefono = document.getElementById('telefono').value.trim();
+            if (telefono.length < 7) { badge.classList.add('hidden'); return; }
+
+            debounceLeadMatch = setTimeout(async () => {
+                const cola = telefono.replace(/\D/g, '').slice(-8);
+                if (cola.length < 8) { badge.classList.add('hidden'); return; }
+
+                const { data, error } = await _supabaseClient
+                    .from('consultas_showroom')
+                    .select('cliente_nombre, cliente_telefono, vehiculos, creado_el')
+                    .not('cliente_telefono', 'is', null)
+                    .order('creado_el', { ascending: false })
+                    .limit(50);
+
+                if (error || !data) { badge.classList.add('hidden'); return; }
+
+                const match = data.find(l => (l.cliente_telefono || '').replace(/\D/g, '').slice(-8) === cola);
+                if (match) {
+                    const autos = (match.vehiculos || []).join(', ') || 'su selección';
+                    badge.innerHTML = `<i class="fa-solid fa-link"></i> Vinculado a Lead Web: ${match.cliente_nombre || 'Cliente'} — ${autos}`;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }, 400);
+        }
+
         async function init() {
             if(!idUnidad) { window.location.href = 'inventario.html'; return; }
             const { data: unidad, error } = await _supabaseClient.from('inventario').select('*').eq('id', idUnidad).single();
@@ -234,7 +266,8 @@
 
                 const u = window.unidadData;
                 const payloadVenta = {
-                    vehiculo: `${u.marca} ${u.modelo}`, 
+                    vehiculo: `${u.marca} ${u.modelo}`,
+                    vehiculo_id_original: idUnidad,
                     vendedor: operadorEmail, 
                     precio_venta: parseFloat(document.getElementById('precio_final').value),
                     costo_compra: u.costo_adquisicion || u.costo_compra || 0,

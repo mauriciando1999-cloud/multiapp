@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Leads Showroom | Multiamerica</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet">
 
@@ -58,14 +56,14 @@
         </div>
     </main>
 
-    <img id="img-header" src="encabezado.jpeg" class="hidden" crossorigin="anonymous">
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script>
         const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
         const uEmail = localStorage.getItem('operador_email');
         if (!uEmail) { window.location.href = 'index.html'; }
+
+        const WEB_BASE_URL = 'https://multiamerica-web.vercel.app';
 
         function escapeHtml(str) {
             return String(str ?? '').replace(/[&<>"']/g, (c) => ({
@@ -183,99 +181,36 @@
             }
         }
 
+        // Une cada vehículo con el link a su ficha real en la web publica
+        // (si tenemos el id) para que el cliente pueda verla sin PDFs.
+        function listaVehiculosConLink(l) {
+            if (l.vehiculo_ids && l.vehiculo_ids.length > 0) {
+                return l.vehiculo_ids.map((vid, i) => {
+                    const auto = vehiculosPorId[vid];
+                    const etiqueta = auto ? `${auto.marca} ${auto.modelo}` : (l.vehiculos || [])[i] || 'Vehículo';
+                    return `🚗 ${etiqueta}: ${WEB_BASE_URL}/detalle.html?id=${vid}`;
+                }).join('\n');
+            }
+            return (l.vehiculos || []).map(nombre => `🚗 ${nombre}`).join('\n') || '🚗 tu selección';
+        }
+
         function construirMensajeWa(l) {
             const esCita = l.tipo === 'Cita';
             const nombreGerente = (miNombre || l.gerente_nombre || '').split(' ')[0] || 'un asesor';
-            const listaAutos = (l.vehiculos || []).join(', ') || 'tu selección';
+            const listaAutos = listaVehiculosConLink(l);
             return esCita
-                ? `¡Hola ${l.cliente_nombre || ''}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nTe escribo para confirmar tu cita del *${l.fecha_hora || ''}*${l.ubicacion ? ` en ${l.ubicacion}` : ''} por:\n🚗 ${listaAutos}\n\n¿Confirmamos?`
-                : `¡Hola ${l.cliente_nombre || ''}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nVi que consultaste por:\n🚗 ${listaAutos}\n\n¿Conversamos? Estoy para ayudarte.`;
+                ? `¡Hola ${l.cliente_nombre || ''}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nTe escribo para confirmar tu cita del *${l.fecha_hora || ''}*${l.ubicacion ? ` en ${l.ubicacion}` : ''} por:\n${listaAutos}\n\n¿Confirmamos?`
+                : `¡Hola ${l.cliente_nombre || ''}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nVi que consultaste por:\n${listaAutos}\n\n¿Conversamos? Estoy para ayudarte.`;
         }
 
-        // Genera el PDF con la ficha de los vehículos solicitados, abre
-        // WhatsApp y marca el lead como contactado. El PDF va PRIMERO:
-        // wa.me suele saltar directo a la app de WhatsApp en el celular,
-        // lo que le quita el foco a la pestaña antes de que termine la
-        // descarga si se dispara después.
         function contactarLead(id) {
             const lead = todosLosLeads.find(l => l.id === id);
             if (!lead || !lead.cliente_telefono) return;
-
-            try {
-                generarPdfSolicitud(lead);
-            } catch (e) {
-                console.error('Error generando PDF de solicitud:', e);
-                alert('No se pudo generar el PDF de la solicitud: ' + e.message);
-            }
 
             const mensajeWa = construirMensajeWa(lead);
             window.open(`https://wa.me/${lead.cliente_telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensajeWa)}`, '_blank');
 
             if (lead.estatus !== 'Contactado') marcarContactado(id);
-        }
-
-        function generarPdfSolicitud(lead) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('portrait', 'pt', 'letter');
-            const imgHeader = document.getElementById('img-header');
-            const ancho = doc.internal.pageSize.width;
-
-            let startY = 40;
-            if (imgHeader.complete && imgHeader.naturalHeight !== 0) {
-                doc.addImage(imgHeader, 'PNG', 40, 30, ancho - 80, 90);
-                startY = 140;
-            }
-
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(16);
-            doc.setTextColor(20, 20, 20);
-            doc.text('SOLICITUD DE VEHÍCULOS', 40, startY);
-
-            doc.setFontSize(10);
-            doc.setTextColor(90, 90, 90);
-            doc.setFont('helvetica', 'normal');
-            const infoCliente = [
-                `Cliente: ${lead.cliente_nombre || 'S/N'}`,
-                `Teléfono: ${lead.cliente_telefono || 'S/N'}`,
-                `Tipo: ${lead.tipo || 'Consulta'}`,
-                lead.fecha_hora ? `Fecha/Hora: ${lead.fecha_hora}` : null,
-                lead.ubicacion ? `Ubicación: ${lead.ubicacion}` : null,
-                `Asesor: ${miNombre || lead.gerente_nombre || 'Sin asignar'}`
-            ].filter(Boolean);
-            doc.text(infoCliente, 40, startY + 20);
-
-            const vehiculos = (lead.vehiculo_ids && lead.vehiculo_ids.length > 0)
-                ? lead.vehiculo_ids.map((vid, i) => vehiculosPorId[vid] || { marca: (lead.vehiculos || [])[i] || 'Vehículo', modelo: '', anio: '-', kilometraje: null, transmision: '-', precio_venta: null })
-                : (lead.vehiculos || []).map(nombre => ({ marca: nombre, modelo: '', anio: '-', kilometraje: null, transmision: '-', precio_venta: null }));
-
-            const tableData = vehiculos.map(v => [
-                `${(v.marca || '').toUpperCase()} ${(v.modelo || '').toUpperCase()}`.trim(),
-                v.anio || 'N/A',
-                v.kilometraje != null ? v.kilometraje.toLocaleString() : 'N/D',
-                (v.transmision || 'S/D').toUpperCase(),
-                v.precio_venta != null ? `$${v.precio_venta.toLocaleString('de-DE')}` : 'N/D'
-            ]);
-
-            doc.autoTable({
-                startY: startY + infoCliente.length * 14 + 20,
-                margin: { left: 40, right: 40 },
-                head: [['VEHÍCULO', 'AÑO', 'KM', 'TRANSMISIÓN', 'PRECIO']],
-                body: tableData,
-                theme: 'plain',
-                styles: { fontSize: 9, cellPadding: 10, fontStyle: 'bold', textColor: [20, 20, 20] },
-                headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontSize: 9, halign: 'center', letterSpacing: 1 },
-                columnStyles: {
-                    0: { halign: 'left' },
-                    1: { halign: 'center' },
-                    2: { halign: 'center' },
-                    3: { halign: 'center' },
-                    4: { halign: 'right', textColor: [255, 136, 1] }
-                },
-                alternateRowStyles: { fillColor: [248, 248, 248] }
-            });
-
-            const nombreArchivo = `Solicitud-${(lead.cliente_nombre || 'Cliente').replace(/[^a-z0-9]+/gi, '-')}.pdf`;
-            doc.save(nombreArchivo);
         }
 
         cargarMiNombre();

@@ -183,6 +183,7 @@
         const uRol = localStorage.getItem('operador_rol');
         const uSlug = localStorage.getItem('vendedor_slug');
         let miNombre = null;
+        const WEB_BASE_URL = 'https://multiamerica-web.vercel.app';
 
         async function init() {
             if (!uEmail) { window.location.href = 'index.html'; return; }
@@ -301,16 +302,23 @@
             miNombre = data?.nombre || null;
         }
 
+        function listaVehiculosConLink(l) {
+            if (l.vehiculo_ids && l.vehiculo_ids.length > 0) {
+                return l.vehiculo_ids.map((vid, i) => `🚗 ${(l.vehiculos || [])[i] || 'Vehículo'}: ${WEB_BASE_URL}/detalle.html?id=${vid}`).join('\n');
+            }
+            return (l.vehiculos || []).map(nombre => `🚗 ${nombre}`).join('\n') || '🚗 tu selección';
+        }
+
         function construirMensajeWa(l) {
             const esCita = l.tipo === 'Cita';
             const nombre = l.cliente_nombre || '';
             const nombreGerente = (miNombre || l.gerente_nombre || '').split(' ')[0] || 'un asesor';
-            const listaAutos = (l.vehiculos || []).join(', ') || 'tu selección';
+            const listaAutos = listaVehiculosConLink(l);
 
             if (esCita) {
-                return `¡Hola ${nombre}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nTe escribo para confirmar tu cita del *${l.fecha_hora || ''}*${l.ubicacion ? ` en ${l.ubicacion}` : ''} por:\n🚗 ${listaAutos}\n\n¿Confirmamos?`;
+                return `¡Hola ${nombre}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nTe escribo para confirmar tu cita del *${l.fecha_hora || ''}*${l.ubicacion ? ` en ${l.ubicacion}` : ''} por:\n${listaAutos}\n\n¿Confirmamos?`;
             }
-            return `¡Hola ${nombre}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nVi que consultaste por:\n🚗 ${listaAutos}\n\n¿Conversamos? Estoy para ayudarte.`;
+            return `¡Hola ${nombre}! 👋\n\nSoy *${nombreGerente}* de Multiamerica.\n\nVi que consultaste por:\n${listaAutos}\n\n¿Conversamos? Estoy para ayudarte.`;
         }
 
         async function cargarLeadsPreview() {

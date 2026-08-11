@@ -87,9 +87,16 @@
                     Autorizar Acceso →
                 </button>
 
-                
+                <div class="flex items-center gap-3 my-2">
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">o</span>
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                </div>
 
-               
+                <button onclick="loginWithGoogle()" id="google-btn" type="button" class="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all flex items-center justify-center gap-3">
+                    <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.3 2.7l5.7-5.7C33.6 6.5 29 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 15.9 18.9 13 24 13c2.8 0 5.3 1 7.3 2.7l5.7-5.7C33.6 6.5 29 4.5 24 4.5c-7.6 0-14.2 4.3-17.6 10.6z"/><path fill="#4CAF50" d="M24 43.5c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 34.6 26.7 35.5 24 35.5c-5.3 0-9.7-2.6-11.4-6.9l-6.5 5C9.7 39 16.3 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.6l6.2 5.2C40.5 36.4 43.5 30.7 43.5 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
+                    <span id="google-btn-text">Continuar con Google</span>
+                </button>
             </div>
 
             <div id="status-msg" class="text-[10px] font-black uppercase text-center hidden tracking-widest p-4 rounded-xl border"></div>
@@ -216,8 +223,10 @@
         }
 
         async function loginWithGoogle() {
-            btn = document.getElementById('main-btn');
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> REDIRIGIENDO...`;
+            const btn = document.getElementById('google-btn');
+            const btnText = document.getElementById('google-btn-text');
+            btn.disabled = true;
+            btnText.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Redirigiendo...`;
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: 'google',
                 // Vuelve a esta misma página: acá abajo se valida la whitelist
@@ -227,7 +236,8 @@
             });
             if (error) {
                 showStatus(`Fallo SSO: ${error.message}`);
-                btn.innerText = "AUTORIZAR ACCESO →";
+                btn.disabled = false;
+                btnText.innerText = "Continuar con Google";
             }
         }
 

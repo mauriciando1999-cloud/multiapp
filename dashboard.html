@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CENTRAL | Multiamerica</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -15,114 +15,159 @@
     <script src="config.js"></script>
 
     <style>
-        body { background-color: #f8f9fa; color: #0a0a0a; font-family: 'Inter', sans-serif; }
+        :root {
+            --neu-bg: #e7e8ee;
+            --neu-text: #35354a;
+            --neu-text-muted: #8890a3;
+            --neu-light: #ffffff;
+            --neu-dark: #c3c5d1;
+            --neu-accent: linear-gradient(135deg, #ff9d3d, #ff8801);
+        }
+        body { background-color: var(--neu-bg); color: var(--neu-text); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
         .font-title { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; letter-spacing: -0.04em; }
-        .bg-grid { background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px); background-size: 24px 24px; }
-        .bento-card { background: #ffffff; border: 1px solid #f3f4f6; border-radius: 32px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.04); transition: all 0.3s ease; }
-        .live-pulse { width: 8px; height: 8px; background: #FF8801; border-radius: 50%; animation: pulse 2s infinite; }
-        
+
+        /* ============ NEUMORPHISM ============ */
+        .neu-card {
+            background: var(--neu-bg);
+            border-radius: 26px;
+            box-shadow: 8px 8px 16px var(--neu-dark), -8px -8px 16px var(--neu-light);
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+        }
+        .neu-card-sm {
+            background: var(--neu-bg);
+            border-radius: 18px;
+            box-shadow: 6px 6px 12px var(--neu-dark), -6px -6px 12px var(--neu-light);
+            transition: box-shadow 0.25s ease, transform 0.15s ease;
+        }
+        .neu-inset {
+            background: var(--neu-bg);
+            border-radius: 18px;
+            box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light);
+        }
+        .neu-pressable:active { box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); transform: scale(0.98); }
+        .neu-icon-plate {
+            background: var(--neu-bg);
+            border-radius: 14px;
+            box-shadow: 4px 4px 8px var(--neu-dark), -4px -4px 8px var(--neu-light);
+        }
+        .neu-accent {
+            background: var(--neu-accent);
+            box-shadow: 6px 6px 14px rgba(200,110,10,0.28), -4px -4px 10px rgba(255,255,255,0.7);
+            color: #fff;
+        }
+        .neu-dark {
+            background: #23232e;
+            border-radius: 26px;
+            box-shadow: 8px 8px 16px var(--neu-dark), -8px -8px 16px var(--neu-light);
+            color: #fff;
+        }
+        .text-muted { color: var(--neu-text-muted); }
+        .live-pulse { width: 8px; height: 8px; background: #FF8801; border-radius: 50%; animation: pulse 2s infinite; flex-shrink: 0; }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--neu-dark); border-radius: 4px; }
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 136, 1, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 136, 1, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 136, 1, 0); } }
-        
+
         /* Ajustes estructurales de FullCalendar */
-        .fc .fc-toolbar-title { font-size: 1.1rem !important; font-family: 'Montserrat', sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase;}
-        .fc .fc-button-primary { background-color: #000 !important; border: none !important; border-radius: 10px !important; text-transform: uppercase; font-size: 10px !important; font-weight: bold;}
-        .fc-theme-standard th { border-color: #f3f4f6; padding: 8px 0; font-size: 10px; text-transform: uppercase; color: #999;}
-        .fc-theme-standard td { border-color: #f3f4f6; }
+        .fc .fc-toolbar-title { font-size: 1rem !important; font-family: 'Montserrat', sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; color: var(--neu-text); }
+        .fc .fc-button-primary { background: var(--neu-accent) !important; border: none !important; border-radius: 10px !important; text-transform: uppercase; font-size: 10px !important; font-weight: bold; box-shadow: 3px 3px 6px var(--neu-dark); }
+        .fc-theme-standard th { border-color: rgba(0,0,0,0.05); padding: 6px 0; font-size: 9px; text-transform: uppercase; color: var(--neu-text-muted); }
+        .fc-theme-standard td { border-color: rgba(0,0,0,0.05); }
+        .fc-daygrid-day-number, .fc-list-event-time, .fc-list-day-text, .fc-list-day-side-text { color: var(--neu-text) !important; }
+        .fc-list-event:hover td { background: rgba(0,0,0,0.03) !important; }
     </style>
 </head>
-<body class="bg-grid min-h-screen pb-12">
+<body class="min-h-screen pb-12">
 
-    <main class="max-w-[1400px] mx-auto p-4 md:p-8">
-        <header class="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-10 mt-4 md:mt-0">
+    <main class="max-w-[1400px] mx-auto p-3 sm:p-4 md:p-8">
+        <header class="flex flex-col sm:flex-row justify-between sm:items-end gap-4 sm:gap-6 mb-6 sm:mb-10 pt-4 sm:pt-0">
             <div>
-                <div class="flex items-center gap-2 text-[#FF8801] text-[10px] font-black uppercase mb-3">
+                <div class="flex items-center gap-2 text-[#FF8801] text-[9px] sm:text-[10px] font-black uppercase mb-2 sm:mb-3">
                     <div class="live-pulse"></div> <span id="status-tag">Core System Online</span>
                 </div>
-                <h1 id="titulo-central" class="text-6xl md:text-8xl font-title uppercase leading-[0.85] tracking-tight">CENTRAL.</h1>
+                <h1 id="titulo-central" class="text-4xl sm:text-6xl md:text-8xl font-title uppercase leading-[0.85] tracking-tight">CENTRAL.</h1>
             </div>
-            <div class="flex items-center gap-4 bg-white p-3 pr-4 rounded-full shadow-sm border border-gray-100 w-fit">
-                <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center font-title italic text-white text-lg" id="user-initial">?</div>
-                <div class="text-left">
-                    <p id="user-email" class="text-[11px] font-mono font-bold text-gray-800 uppercase tracking-tight">---</p>
+            <div class="neu-card-sm flex items-center gap-3 p-2.5 pr-4 sm:pr-5 w-fit">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 neu-accent rounded-full flex items-center justify-center font-title italic text-lg flex-shrink-0" id="user-initial">?</div>
+                <div class="text-left min-w-0">
+                    <p id="user-email" class="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-tight truncate max-w-[140px] sm:max-w-none">---</p>
                     <button onclick="logout()" class="text-[9px] font-black text-red-500 uppercase hover:text-[#FF8801] transition-colors">Cerrar Sesión</button>
                 </div>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div id="panel-operativo" class="lg:col-span-8 space-y-6 flex flex-col">
-                
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bento-card p-6 flex flex-col justify-between">
-                        <span class="text-[9px] font-black text-gray-400 uppercase">Stock Global</span>
-                        <span class="text-4xl font-title italic mt-2" id="kpi-v">0</span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+            <div id="panel-operativo" class="lg:col-span-8 space-y-4 sm:space-y-6 flex flex-col">
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="neu-card p-4 sm:p-6 flex flex-col justify-between">
+                        <span class="text-[8px] sm:text-[9px] font-black text-muted uppercase">Stock Global</span>
+                        <span class="text-2xl sm:text-4xl font-title italic mt-2" id="kpi-v">0</span>
                     </div>
-                    <div class="bento-card p-6 flex flex-col justify-between border-l-4 border-[#FF8801]">
-                        <span class="text-[9px] font-black text-[#FF8801] uppercase">Mis Gestiones</span>
-                        <span class="text-4xl font-title italic mt-2" id="kpi-c">0</span>
+                    <div class="neu-card p-4 sm:p-6 flex flex-col justify-between">
+                        <span class="text-[8px] sm:text-[9px] font-black text-[#FF8801] uppercase">Mis Gestiones</span>
+                        <span class="text-2xl sm:text-4xl font-title italic mt-2" id="kpi-c">0</span>
                     </div>
-                    <div class="bento-card p-6 bg-black text-white flex flex-col justify-between md:col-span-2">
-                        <span class="text-[9px] font-black text-gray-500 uppercase">Credencial Activa</span>
-                        <span id="rol-tag" class="text-xs font-title italic text-[#FF8801] mt-2 uppercase">---</span>
+                    <div class="neu-dark p-4 sm:p-6 flex flex-col justify-between col-span-2">
+                        <span class="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase">Credencial Activa</span>
+                        <span id="rol-tag" class="text-xs sm:text-sm font-title italic text-[#FF8801] mt-2 uppercase">---</span>
                     </div>
                 </div>
 
-                <div id="seccion-admin" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bento-card p-6 flex flex-col h-[350px]">
-                        <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
-                            <h2 class="text-xl font-title italic uppercase">Revisiones</h2>
-                            <span class="text-[9px] font-black uppercase text-gray-400">Consignaciones</span>
+                <div id="seccion-admin" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div class="neu-card p-4 sm:p-6 flex flex-col h-[300px] sm:h-[350px]">
+                        <div class="flex justify-between items-center mb-4 pb-2 border-b border-black/5">
+                            <h2 class="text-lg sm:text-xl font-title italic uppercase">Revisiones</h2>
+                            <span class="text-[8px] sm:text-[9px] font-black uppercase text-muted">Consignaciones</span>
                         </div>
-                        <div id="lista-solicitudes" class="space-y-3 overflow-y-auto flex-1 pr-2">
-                            <p class="text-xs text-gray-400 font-mono animate-pulse">Sincronizando...</p>
+                        <div id="lista-solicitudes" class="space-y-3 overflow-y-auto flex-1 pr-1 sm:pr-2">
+                            <p class="text-xs text-muted font-mono animate-pulse">Sincronizando...</p>
                         </div>
                     </div>
-                    
-                    <div class="bento-card p-6 flex flex-col h-[350px] relative group">
-                        <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
-                            <h2 class="text-xl font-title italic uppercase text-blue-600">Talento IA</h2>
-                            <a href="admin_postulantes.html" class="text-[9px] font-black uppercase text-blue-500 hover:text-[#FF8801] transition-colors flex items-center gap-1">
+
+                    <div class="neu-card p-4 sm:p-6 flex flex-col h-[300px] sm:h-[350px] relative group">
+                        <div class="flex justify-between items-center mb-4 pb-2 border-b border-black/5">
+                            <h2 class="text-lg sm:text-xl font-title italic uppercase text-blue-600">Talento IA</h2>
+                            <a href="admin_postulantes.html" class="text-[8px] sm:text-[9px] font-black uppercase text-blue-500 hover:text-[#FF8801] transition-colors flex items-center gap-1">
                                 Ver Todos <i class="fa-solid fa-arrow-right"></i>
                             </a>
                         </div>
-                        <div id="lista-postulantes" class="space-y-3 overflow-y-auto flex-1 pr-2">
-                            <p class="text-xs text-gray-400 font-mono animate-pulse">Sincronizando...</p>
+                        <div id="lista-postulantes" class="space-y-3 overflow-y-auto flex-1 pr-1 sm:pr-2">
+                            <p class="text-xs text-muted font-mono animate-pulse">Sincronizando...</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <a href="inventario.html" class="bento-card p-6 group flex flex-col items-center justify-center text-center hover:border-[#FF8801]">
-                        <div class="w-12 h-1 bg-black mb-4 group-hover:bg-[#FF8801] transition-colors"></div>
-                        <h3 class="text-sm font-title uppercase italic">Inventario</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <a href="inventario.html" class="neu-card-sm neu-pressable p-4 sm:p-6 flex flex-col items-center justify-center text-center">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 neu-icon-plate flex items-center justify-center mb-3 text-black"><i class="fa-solid fa-warehouse"></i></div>
+                        <h3 class="text-[11px] sm:text-sm font-title uppercase italic">Inventario</h3>
                     </a>
-                    <a href="registro.html" class="bento-card p-6 bg-black text-white group flex flex-col items-center justify-center text-center transform hover:scale-105 transition-transform">
-                        <div class="w-12 h-1 bg-[#FF8801] mb-4"></div>
-                        <h3 class="text-sm font-title uppercase italic">Registrar</h3>
+                    <a href="registro.html" class="neu-accent neu-pressable rounded-[18px] p-4 sm:p-6 flex flex-col items-center justify-center text-center">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-3"><i class="fa-solid fa-plus"></i></div>
+                        <h3 class="text-[11px] sm:text-sm font-title uppercase italic">Registrar</h3>
                     </a>
-                    <a href="vendedores.html" class="bento-card p-6 group flex flex-col items-center justify-center text-center hover:border-black">
-                        <div class="w-12 h-1 bg-gray-200 mb-4 group-hover:bg-black transition-colors"></div>
-                        <h3 class="text-sm font-title uppercase italic">Mi Equipo</h3>
+                    <a href="vendedores.html" class="neu-card-sm neu-pressable p-4 sm:p-6 flex flex-col items-center justify-center text-center">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 neu-icon-plate flex items-center justify-center mb-3 text-black"><i class="fa-solid fa-users"></i></div>
+                        <h3 class="text-[11px] sm:text-sm font-title uppercase italic">Mi Equipo</h3>
                     </a>
-                    <a href="consultas.html" class="bento-card p-6 group flex flex-col items-center justify-center text-center hover:border-[#FF8801]">
-                        <div class="w-12 h-1 bg-gray-200 mb-4 group-hover:bg-[#FF8801] transition-colors"></div>
-                        <h3 class="text-sm font-title uppercase italic">Leads</h3>
+                    <a href="consultas.html" class="neu-card-sm neu-pressable p-4 sm:p-6 flex flex-col items-center justify-center text-center">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 neu-icon-plate flex items-center justify-center mb-3 text-black"><i class="fa-solid fa-headset"></i></div>
+                        <h3 class="text-[11px] sm:text-sm font-title uppercase italic">Leads</h3>
                     </a>
                 </div>
 
-                <a href="analisis_ventas.html" id="btn-analisis" class="bento-card p-6 border-2 border-transparent hover:border-[#FF8801] bg-orange-50/30 flex justify-between items-center transition-all cursor-pointer">
-                    <h3 class="text-xs font-title uppercase italic text-[#FF8801]">Inteligencia Global de Negocios</h3>
-                    <span class="text-orange-600 font-bold text-xs">ACCESO PRO →</span>
+                <a href="analisis_ventas.html" id="btn-analisis" class="neu-card neu-pressable p-4 sm:p-6 flex justify-between items-center gap-3">
+                    <h3 class="text-[11px] sm:text-xs font-title uppercase italic text-[#FF8801]">Inteligencia Global de Negocios</h3>
+                    <span class="text-orange-600 font-bold text-[10px] sm:text-xs flex-shrink-0">ACCESO PRO →</span>
                 </a>
             </div>
 
             <div id="columna-agenda" class="lg:col-span-4 flex flex-col">
-                <div class="bento-card p-6 flex-1 bg-white min-h-[500px]">
-                    <h2 class="text-xl font-title italic uppercase mb-4 text-center border-b border-gray-100 pb-2">Agenda</h2>
+                <div class="neu-card p-4 sm:p-6 flex-1 min-h-[380px] sm:min-h-[500px]">
+                    <h2 class="text-lg sm:text-xl font-title italic uppercase mb-4 text-center pb-2 border-b border-black/5">Agenda</h2>
                     <div id="calendar" class="w-full"></div>
                 </div>
             </div>
@@ -137,7 +182,7 @@
 
         async function init() {
             if (!uEmail) { window.location.href = 'index.html'; return; }
-            
+
             document.getElementById('user-email').innerText = uEmail;
             document.getElementById('user-initial').innerText = uEmail[0].toUpperCase();
             document.getElementById('rol-tag').innerText = uRol === 'admin' ? 'SYSTEM ADMINISTRATOR' : `GERENTE DE EQUIPO`;
@@ -165,7 +210,7 @@
 
                 let q = _supabase.from('consignaciones').select('*', { count: 'exact', head: true }).eq('estatus', 'Aprobado');
                 if (uRol === 'gerente') q = q.eq('vendedor_slug', uSlug);
-                
+
                 const { count: c } = await q;
                 document.getElementById('kpi-c').innerText = c || 0;
             } catch (e) { console.error("KPI Error:", e); }
@@ -180,26 +225,26 @@
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(10);
-                
+
                 if (error) throw error;
 
                 console.log("Dato crudo de consignaciones:", data); // Abre F12 para ver esto
 
                 if (!data || data.length === 0) {
-                    container.innerHTML = '<p class="text-xs text-gray-400 font-bold mt-10 text-center uppercase">Bandeja Vacía en BD</p>';
+                    container.innerHTML = '<p class="text-xs text-muted font-bold mt-10 text-center uppercase">Bandeja Vacía en BD</p>';
                     return;
                 }
 
                 container.innerHTML = data.map(c => `
-                    <div class="p-4 border border-gray-100 rounded-3xl flex justify-between items-center bg-gray-50/30 hover:bg-white transition-all">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-black rounded-2xl flex items-center justify-center text-[#FF8801] font-bold text-xs"><i class="fa-solid fa-car"></i></div>
-                            <div>
-                                <p class="text-[11px] font-black uppercase leading-tight">${c.vehiculo || 'SIN VEHÍCULO'}</p>
-                                <p class="text-[9px] text-gray-400 font-bold mt-1">PROP: ${c.nombre || 'S/N'} | ESTATUS: <span class="text-red-500">${c.estatus || 'VACÍO/NULO'}</span></p>
+                    <div class="neu-inset p-3 sm:p-4 flex justify-between items-center gap-2">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 neu-icon-plate flex items-center justify-center text-[#FF8801] font-bold text-xs flex-shrink-0"><i class="fa-solid fa-car"></i></div>
+                            <div class="min-w-0">
+                                <p class="text-[10px] sm:text-[11px] font-black uppercase leading-tight truncate">${c.vehiculo || 'SIN VEHÍCULO'}</p>
+                                <p class="text-[8px] sm:text-[9px] text-muted font-bold mt-1 truncate">PROP: ${c.nombre || 'S/N'} | ESTATUS: <span class="text-red-500">${c.estatus || 'VACÍO/NULO'}</span></p>
                             </div>
                         </div>
-                        <a href="revision_detalle.html?id=${c.id}" class="text-[9px] bg-black text-white px-4 py-2 rounded-xl font-black uppercase hover:bg-[#FF8801] transition-colors">Auditar</a>
+                        <a href="revision_detalle.html?id=${c.id}" class="text-[8px] sm:text-[9px] neu-accent px-3 sm:px-4 py-2 rounded-xl font-black uppercase flex-shrink-0">Auditar</a>
                     </div>
                 `).join('');
             } catch (e) {
@@ -216,25 +261,25 @@
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(4);
-                
+
                 if (error) throw error;
                 if (!data || data.length === 0) {
-                    container.innerHTML = '<p class="text-xs text-gray-400 font-bold mt-10 text-center uppercase tracking-widest">Bandeja Vacía</p>';
+                    container.innerHTML = '<p class="text-xs text-muted font-bold mt-10 text-center uppercase tracking-widest">Bandeja Vacía</p>';
                     return;
                 }
 
                 container.innerHTML = data.map(p => `
-                    <div onclick="window.location.href='admin_postulantes.html'" class="p-3 border border-gray-100 rounded-3xl flex justify-between items-center bg-blue-50/20 hover:bg-white cursor-pointer transition-all group">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white text-[10px] font-bold">
-                                ${p.nombre[0]}${p.apellido[0]}
+                    <div onclick="window.location.href='admin_postulantes.html'" class="neu-inset neu-pressable p-3 flex justify-between items-center gap-2 cursor-pointer group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                                ${p.nombre[0]}${(p.apellido || '')[0] || ''}
                             </div>
-                            <div>
-                                <p class="text-[10px] font-black uppercase">${p.nombre} ${p.apellido}</p>
+                            <div class="min-w-0">
+                                <p class="text-[10px] font-black uppercase truncate">${p.nombre} ${p.apellido || ''}</p>
                                 <p class="text-[8px] text-blue-500 font-black mt-0.5">VER EXPEDIENTE</p>
                             </div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-blue-600 transition-colors"></i>
+                        <i class="fa-solid fa-chevron-right text-muted group-hover:text-blue-600 transition-colors flex-shrink-0"></i>
                     </div>
                 `).join('');
             } catch (e) {
@@ -252,7 +297,7 @@
                 if (!error && data) {
                     eventos = data.map(cita => ({
                         id: cita.id,
-                        title: `${cita.prospecto_nombre} (${cita.tipo_entrevista || 'Entrevista'})`, 
+                        title: `${cita.prospecto_nombre} (${cita.tipo_entrevista || 'Entrevista'})`,
                         start: cita.fecha_hora,
                         backgroundColor: '#000000',
                         borderColor: '#FF8801',
@@ -269,14 +314,14 @@
                 buttonText: { today: 'Hoy' },
                 events: eventos
             });
-            
+
             calendar.render();
             // Corrección de tamaño para contenedores Flex de Tailwind
             setTimeout(() => calendar.updateSize(), 300);
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-        
+
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>

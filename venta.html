@@ -13,19 +13,30 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        body { background-color: #f8fafc; color: #1e293b; font-family: 'Montserrat', sans-serif; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 25px 25px; }
-        .glass-container { background: white; border: 1px solid #e2e8f0; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05); }
-        
-        input, select, textarea { 
-            background: #ffffff !important; 
-            border: 2px solid #f1f5f9 !important; 
-            padding: 15px !important; 
-            color: #0f172a !important; 
-            font-family: 'Roboto Mono'; 
-            font-size: 14px; 
-            width: 100%; 
-            border-radius: 16px; 
-            transition: all 0.3s ease; 
+        :root {
+            --neu-bg: #e7e8ee;
+            --neu-text: #35354a;
+            --neu-text-muted: #8890a3;
+            --neu-light: #ffffff;
+            --neu-dark: #c3c5d1;
+        }
+        body { background-color: var(--neu-bg); color: var(--neu-text); font-family: 'Montserrat', sans-serif; }
+        .text-muted { color: var(--neu-text-muted); }
+        .glass-container { background: var(--neu-bg); box-shadow: 12px 12px 24px var(--neu-dark), -12px -12px 24px var(--neu-light); }
+        .neu-inset { background: var(--neu-bg); box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); border-radius: 24px; }
+        .neu-card-sm { background: var(--neu-bg); border-radius: 14px; box-shadow: 5px 5px 10px var(--neu-dark), -5px -5px 10px var(--neu-light); }
+
+        input, select, textarea {
+            background: var(--neu-bg) !important;
+            box-shadow: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
+            border: none !important;
+            padding: 15px !important;
+            color: var(--neu-text) !important;
+            font-family: 'Roboto Mono';
+            font-size: 14px;
+            width: 100%;
+            border-radius: 16px;
+            transition: all 0.3s ease;
         }
 
         /* ESCALADO DINÁMICO DEL PRECIO */
@@ -40,18 +51,18 @@
             }
         }
         
-        input:focus, select:focus, textarea:focus { border-color: #FF8801 !important; outline: none; box-shadow: 0 0 0 4px rgba(255, 136, 1, 0.1); }
-        label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 800; margin-bottom: 8px; display: block; margin-left: 4px; }
-        
+        input:focus, select:focus, textarea:focus { outline: none; box-shadow: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light), 0 0 0 3px rgba(255, 136, 1, 0.25); }
+        label { font-size: 10px; color: var(--neu-text-muted); text-transform: uppercase; letter-spacing: 0.15em; font-weight: 800; margin-bottom: 8px; display: block; margin-left: 4px; }
+
         /* Corregido el error del padding */
         .receipt-card { background: #fff7ed; border: 2px dashed #ffedd5; padding: 20px; border-radius: 20px; }
         @media (min-width: 768px) { .receipt-card { padding: 24px; } }
 
         .btn-finalize { background: #0f172a; color: white; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .btn-finalize:hover { background: #FF8801; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 136, 1, 0.2); }
-        
-        .file-upload { border: 2px dashed #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; background: #fafafa; }
-        .file-upload:hover { border-color: #FF8801; background: #fffaf5; }
+
+        .file-upload { border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; background: var(--neu-bg); box-shadow: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light); }
+        .file-upload:hover { box-shadow: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light), 0 0 0 2px rgba(255,136,1,0.3); }
         
         .upload-panel { transition: max-height 0.4s ease-out, opacity 0.4s ease-out; overflow: hidden; max-height: 0; opacity: 0; }
         .upload-panel.open { max-height: 500px; opacity: 1; }
@@ -63,37 +74,37 @@
     <main class="max-w-4xl w-full glass-container p-6 sm:p-8 md:p-14 relative overflow-hidden rounded-3xl md:rounded-[40px]">
         <div class="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-orange-50 rounded-bl-full -z-10 opacity-50"></div>
 
-        <header class="mb-8 md:mb-12 border-b border-slate-100 pb-6 md:pb-8">
+        <header class="mb-8 md:mb-12 border-b border-black/5 pb-6 md:pb-8">
             <div class="flex flex-col md:flex-row md:justify-between items-start gap-4 md:gap-0">
                 <div>
                     <span class="text-[#FF8801] text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-2 block">Protocolo de Cierre</span>
-                    <h1 class="text-3xl md:text-5xl font-['Epilogue'] font-black uppercase italic text-slate-900 leading-none">
+                    <h1 class="text-3xl md:text-5xl font-['Epilogue'] font-black uppercase italic leading-none">
                         FINALIZAR <span class="text-[#FF8801]">VENTA</span>
                     </h1>
                 </div>
-                <div class="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100 w-full md:w-auto text-left md:text-right">
-                    <p class="text-[8px] font-bold text-slate-400 uppercase">Ref. Interna</p>
-                    <p id="ref-id" class="text-xs font-mono font-bold text-slate-900">#--------</p>
+                <div class="neu-card-sm p-3 md:p-4 w-full md:w-auto text-left md:text-right">
+                    <p class="text-[8px] font-bold text-muted uppercase">Ref. Interna</p>
+                    <p id="ref-id" class="text-xs font-mono font-bold">#--------</p>
                 </div>
             </div>
-            <p id="unidad-info" class="text-xs md:text-sm font-bold text-slate-500 mt-4 md:mt-6 flex items-center gap-2">
+            <p id="unidad-info" class="text-xs md:text-sm font-bold text-muted mt-4 md:mt-6 flex items-center gap-2">
                 <i class="fa-solid fa-car-side text-[#FF8801]"></i> Cargando especificaciones...
             </p>
         </header>
 
         <form id="venta-form" class="space-y-6 md:space-y-10">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 bg-slate-50/50 p-4 md:p-6 rounded-[24px] md:rounded-[30px] border border-slate-100">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 neu-inset p-4 md:p-6">
                 <div class="space-y-2">
                     <label>Precio Final Acordado ($)</label>
                     <div class="relative group flex items-center">
-                        <span class="absolute left-4 md:left-6 font-black text-slate-300 text-xl md:text-2xl z-20 pointer-events-none group-focus-within:text-[#FF8801] transition-colors">$</span>
+                        <span class="absolute left-4 md:left-6 font-black text-muted text-xl md:text-2xl z-20 pointer-events-none group-focus-within:text-[#FF8801] transition-colors">$</span>
                         <input type="number" id="precio_final" required placeholder="0.00"
-                               class="font-black text-slate-900 w-full rounded-xl md:rounded-2xl border-2 border-slate-100 focus:border-[#FF8801] outline-none transition-all bg-white relative">
+                               class="font-black w-full rounded-xl md:rounded-2xl outline-none transition-all relative">
                     </div>
                 </div>
                 <div>
                     <label>Canal de Pago</label>
-                    <select id="metodo_pago" class="font-bold text-slate-700 h-full min-h-[50px] md:min-h-[60px]">
+                    <select id="metodo_pago" class="font-bold h-full min-h-[50px] md:min-h-[60px]">
                         <option value="EFECTIVO">EFECTIVO (DIVISAS)</option>
                         <option value="ZELLE">ZELLE / USA</option>
                         <option value="BINANCE">CRYPTOS (USDT)</option>
@@ -124,18 +135,18 @@
                     <textarea id="notas" rows="3" placeholder="Detalles de la entrega..." class="font-medium"></textarea>
                 </div>
 
-                <div class="border-t border-slate-100 pt-4">
-                    <button type="button" onclick="toggleUpload()" class="flex items-center gap-2 text-slate-500 hover:text-[#FF8801] transition-colors font-bold text-xs uppercase tracking-widest outline-none">
+                <div class="border-t border-black/5 pt-4">
+                    <button type="button" onclick="toggleUpload()" class="flex items-center gap-2 text-muted hover:text-[#FF8801] transition-colors font-bold text-xs uppercase tracking-widest outline-none">
                         <i id="upload-icon" class="fa-solid fa-chevron-down transition-transform"></i>
                         Adjuntar Comprobante de Pago
                     </button>
-                    
+
                     <div id="upload-panel" class="upload-panel mt-4">
                         <div class="file-upload" onclick="document.getElementById('comprobante_file').click()">
                             <input type="file" id="comprobante_file" accept="image/*" class="hidden" onchange="previewImage(this)">
                             <div id="preview-box">
-                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-300 mb-2 block"></i>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Toca para subir foto</p>
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-muted mb-2 block"></i>
+                                <p class="text-[9px] font-bold text-muted uppercase tracking-widest">Toca para subir foto</p>
                             </div>
                         </div>
                     </div>
@@ -152,12 +163,12 @@
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100">
+            <div class="pt-4 border-t border-black/5">
                 <button type="submit" id="btn-submit" class="btn-finalize w-full py-5 rounded-2xl font-['Epilogue'] font-black uppercase italic text-lg flex items-center justify-center gap-3">
                     <span>REGISTRAR CIERRE</span>
                     <i class="fa-solid fa-arrow-right-long text-sm"></i>
                 </button>
-                <a href="inventario.html" class="block text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-6 hover:text-red-500 transition-colors">
+                <a href="inventario.html" class="block text-center text-[10px] font-bold text-muted uppercase tracking-[0.3em] mt-6 hover:text-red-500 transition-colors">
                     <i class="fa-solid fa-xmark mr-2"></i> Cancelar
                 </a>
             </div>

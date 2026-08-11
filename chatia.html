@@ -12,38 +12,50 @@
     <script src="config.js"></script>
 
     <style>
-        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        :root {
+            --neu-bg: #e7e8ee;
+            --neu-text: #35354a;
+            --neu-text-muted: #8890a3;
+            --neu-light: #ffffff;
+            --neu-dark: #c3c5d1;
+        }
+        body { background-color: var(--neu-bg); color: var(--neu-text); font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; }
         .font-title { font-family: 'Montserrat', sans-serif; }
+        .text-muted { color: var(--neu-text-muted); }
         .chat-container { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .msg-ia { background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 20px 20px 20px 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+
+        .neu-card-sm { background: var(--neu-bg); border-radius: 18px; box-shadow: 6px 6px 12px var(--neu-dark), -6px -6px 12px var(--neu-light); transition: all .2s; }
+        .neu-pressable:active { box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); transform: scale(0.98); }
+        .neu-inset { background: var(--neu-bg); box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); }
+
+        .msg-ia { background: var(--neu-bg); border-radius: 20px 20px 20px 4px; box-shadow: 4px 4px 10px var(--neu-dark), -4px -4px 10px var(--neu-light); }
         .msg-user { background-color: #ff8801; color: white; border-radius: 20px 20px 4px 20px; box-shadow: 0 4px 15px rgba(255,136,1,0.2); }
     </style>
 </head>
 <body>
 
-    <header class="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-        <div class="flex items-center gap-4">
-            <button onclick="history.back()" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-50 transition-all">
+    <header class="px-4 sm:px-6 py-4 flex items-center justify-between z-10">
+        <div class="flex items-center gap-3 sm:gap-4">
+            <button onclick="history.back()" class="neu-card-sm neu-pressable w-10 h-10 flex items-center justify-center text-muted flex-shrink-0">
                 <i class="fa-solid fa-arrow-left"></i>
             </button>
             <div>
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <h1 class="text-xs font-black uppercase tracking-widest text-gray-400">Asistente de Inventario</h1>
+                    <h1 class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-muted">Asistente de Inventario</h1>
                 </div>
-                <h2 class="text-xl font-title italic uppercase leading-none mt-1">Talento <span class="text-[#ff8801]">IA</span></h2>
+                <h2 class="text-lg sm:text-xl font-title italic uppercase leading-none mt-1">Talento <span class="text-[#ff8801]">IA</span></h2>
             </div>
         </div>
-        <div class="hidden md:block px-4 py-1.5 bg-gray-50 rounded-full border border-gray-100">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest" id="contexto-vehiculo">Cargando contexto...</span>
+        <div class="hidden md:block neu-inset px-4 py-1.5 rounded-full">
+            <span class="text-[10px] font-bold text-muted uppercase tracking-widest" id="contexto-vehiculo">Cargando contexto...</span>
         </div>
     </header>
 
     <main class="chat-container p-4 md:p-8 max-w-4xl mx-auto w-full flex flex-col gap-6" id="chat-box">
-        
+
         <div id="loader-inicial" class="flex gap-4 max-w-[85%]">
             <div class="w-8 h-8 rounded-full bg-black flex-shrink-0 flex items-center justify-center text-[#ff8801] text-xs">
                 <i class="fa-solid fa-robot"></i>
@@ -59,16 +71,16 @@
 
     </main>
 
-    <footer class="bg-white border-t border-gray-100 p-4 z-10">
+    <footer class="p-3 sm:p-4 z-10">
         <div class="max-w-4xl mx-auto relative flex items-center">
-            <input type="text" id="user-input" placeholder="Escribe tu consulta aquí..." 
-                class="w-full bg-gray-50 border border-gray-200 rounded-full py-4 pl-6 pr-16 text-sm font-semibold outline-none focus:border-[#ff8801] focus:ring-1 focus:ring-[#ff8801] transition-all">
-            
-            <button onclick="enviarMensaje()" class="absolute right-2 w-10 h-10 bg-[#ff8801] text-white rounded-full flex items-center justify-center hover:bg-black transition-colors shadow-md">
+            <input type="text" id="user-input" placeholder="Escribe tu consulta aquí..."
+                class="neu-inset w-full rounded-full py-4 pl-6 pr-16 text-sm font-semibold outline-none">
+
+            <button onclick="enviarMensaje()" class="neu-card-sm neu-pressable absolute right-2 w-10 h-10 bg-[#ff8801] text-white rounded-full flex items-center justify-center">
                 <i class="fa-solid fa-paper-plane text-sm"></i>
             </button>
         </div>
-        <p class="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-3">Multiamerica AI - Respuestas automáticas sujetas a verificación en piso</p>
+        <p class="text-center text-[9px] font-bold text-muted uppercase tracking-widest mt-3">Multiamerica AI - Respuestas automáticas sujetas a verificación en piso</p>
     </footer>
 
     <script>
@@ -110,6 +122,12 @@
             }
         }
 
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str ?? '';
+            return div.innerHTML;
+        }
+
         // Función visual para renderizar mensajes del usuario
         function enviarMensaje() {
             const input = document.getElementById('user-input');
@@ -121,11 +139,11 @@
             chatBox.innerHTML += `
                 <div class="flex gap-4 max-w-[85%] self-end flex-row-reverse">
                     <div class="msg-user p-4 text-sm font-semibold leading-relaxed">
-                        ${texto}
+                        ${escapeHtml(texto)}
                     </div>
                 </div>
             `;
-            
+
             input.value = '';
             scrollToBottom();
 
@@ -135,16 +153,16 @@
 
         // Función visual para renderizar mensajes de la IA
         function agregarMensajeIA(texto) {
-            // Reemplazamos negritas markdown por HTML para que se vea bien
-            const textoFormateado = texto.replace(/\*\*(.*?)\*\*/g, '<span class="font-black text-black">$1</span>');
-            
+            // Escapamos primero y luego reemplazamos negritas markdown por HTML
+            const textoFormateado = escapeHtml(texto).replace(/\*\*(.*?)\*\*/g, '<span class="font-black text-[var(--neu-text)]">$1</span>');
+
             const chatBox = document.getElementById('chat-box');
             chatBox.innerHTML += `
                 <div class="flex gap-4 max-w-[85%]">
                     <div class="w-8 h-8 rounded-full bg-black flex-shrink-0 flex items-center justify-center text-[#ff8801] text-xs">
                         <i class="fa-solid fa-robot"></i>
                     </div>
-                    <div class="msg-ia p-4 text-sm text-gray-700 leading-relaxed font-medium">
+                    <div class="msg-ia p-4 text-sm text-muted leading-relaxed font-medium">
                         ${textoFormateado}
                     </div>
                 </div>

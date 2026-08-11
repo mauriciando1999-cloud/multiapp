@@ -60,8 +60,8 @@ function renderizarListasKanban(lista) {
         ? `<div class="p-6 text-center text-xs font-bold text-gray-300 uppercase">Sin prospectos nuevos</div>` 
         : buildCardsHTML(nuevos);
 
-    containerCitados.innerHTML = citados.length === 0 
-        ? `<div class="p-6 text-center text-xs font-bold text-gray-300 uppercase">Ninguna cita agendada</div>` 
+    containerCitados.innerHTML = citados.length === 0
+        ? `<div class="p-6 text-center text-xs font-bold text-muted uppercase">Ninguna cita agendada</div>`
         : buildCardsHTML(citados);
 }
 
@@ -69,17 +69,17 @@ function buildCardsHTML(arr) {
     return arr.map(p => {
         const isChecked = seleccionados.has(p.id) ? 'checked' : '';
         const colorPunto = p.contratacion === 'citado' ? 'bg-orange-500' : 'bg-blue-500';
-        
+
         return `
-        <div class="bg-white border border-gray-100 p-4 rounded-[20px] hover:border-orange-200 hover:shadow-xl transition-all flex items-center gap-3">
+        <div class="neu-card-sm neu-pressable p-4 flex items-center gap-3">
             <div class="checkbox-custom ${isChecked}" onclick="toggleSeleccion(event, '${p.id}')"></div>
             <div class="flex-1 overflow-hidden cursor-pointer flex items-center gap-3" onclick="abrirModalExpediente('${p.id}')">
-                <div class="w-10 h-10 rounded-xl bg-gray-50 text-gray-700 flex items-center justify-center font-title italic uppercase border border-gray-200">
+                <div class="neu-icon-plate w-10 h-10 flex items-center justify-center font-title italic uppercase text-black">
                     ${escapeHtml(p.nombre[0])}${p.apellido ? escapeHtml(p.apellido[0]) : ''}
                 </div>
                 <div class="flex-1 overflow-hidden">
                     <h3 class="font-black text-[10px] uppercase tracking-tighter truncate">${escapeHtml(p.nombre)} ${escapeHtml(p.apellido || '')}</h3>
-                    <p class="text-[8px] text-gray-400 font-bold uppercase truncate">${escapeHtml(p.experiencia_declarada || 'Sin Exp.')}</p>
+                    <p class="text-[8px] text-muted font-bold uppercase truncate">${escapeHtml(p.experiencia_declarada || 'Sin Exp.')}</p>
                 </div>
                 <div class="w-2 h-2 rounded-full flex-shrink-0 ${colorPunto}"></div>
             </div>

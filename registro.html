@@ -11,24 +11,38 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,900&family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
     <style>
-        body { background-color: #ffffff; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        :root {
+            --neu-bg: #e7e8ee;
+            --neu-text: #35354a;
+            --neu-text-muted: #8890a3;
+            --neu-light: #ffffff;
+            --neu-dark: #c3c5d1;
+        }
+        body { background-color: var(--neu-bg); color: var(--neu-text); font-family: 'Inter', sans-serif; min-height: 100vh; }
         .font-title { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; }
-        input, select { 
-            background: #f9f9f9 !important; 
-            border: 1px solid #ddd !important; 
-            border-radius: 12px; 
-            padding: 12px; 
-            width: 100%; 
+        input, select {
+            background: var(--neu-bg) !important;
+            box-shadow: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
+            border: none !important;
+            border-radius: 14px;
+            padding: 12px;
+            width: 100%;
             font-size: 16px;
             position: relative;
-            z-index: 10; 
+            z-index: 10;
             cursor: text;
+            color: var(--neu-text);
         }
-        label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 800; margin-bottom: 8px; display: block; }
+        label { font-size: 9px; color: var(--neu-text-muted); text-transform: uppercase; letter-spacing: 0.2em; font-weight: 800; margin-bottom: 8px; display: block; }
+        .text-muted { color: var(--neu-text-muted); }
+        .neu-card { background: var(--neu-bg); border-radius: 34px; box-shadow: 10px 10px 20px var(--neu-dark), -10px -10px 20px var(--neu-light); }
+        .neu-card-sm { background: var(--neu-bg); border-radius: 16px; box-shadow: 6px 6px 12px var(--neu-dark), -6px -6px 12px var(--neu-light); transition: all 0.2s ease; }
+        .neu-inset { background: var(--neu-bg); border-radius: 24px; box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); }
+        .neu-pressable:active { box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); transform: scale(0.98); }
         .btn-primary { background: #1a1a1a; color: white; border-radius: 20px; font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; transition: all 0.4s; }
-        .btn-ai { background: linear-gradient(90deg, #FF8801, #ff4d01); color: white; border-radius: 15px; font-weight: 900; font-style: italic; transition: all 0.2s; }
-        .btn-ai:hover { box-shadow: 0 4px 15px rgba(255,136,1,0.4); transform: translateY(-2px); }
-        
+        .btn-ai { background: linear-gradient(90deg, #FF8801, #ff4d01); color: white; border-radius: 15px; font-weight: 900; font-style: italic; transition: all 0.2s; box-shadow: 5px 5px 12px rgba(200,110,10,0.28), -3px -3px 8px rgba(255,255,255,0.7); }
+        .btn-ai:hover { transform: translateY(-2px); }
+
         /* Estilos para el drag and drop */
         .sortable-ghost { opacity: 0.4; border: 2px dashed #FF8801; }
         .photo-item { cursor: grab; position: relative; }
@@ -37,50 +51,50 @@
     </style>
 </head>
 
-<body class="p-4 md:p-12">
-    <main class="max-w-4xl mx-auto p-6 bg-white border border-gray-100 shadow-2xl rounded-[40px]">
-        <header class="mb-10 border-b pb-8 flex justify-between items-center">
+<body class="p-3 sm:p-6 md:p-12">
+    <main class="neu-card max-w-4xl mx-auto p-5 sm:p-8 md:p-10">
+        <header class="mb-6 sm:mb-10 border-b border-black/5 pb-6 sm:pb-8 flex justify-between items-center">
             <div>
-                <span class="text-[#FF8801] text-[10px] font-bold uppercase tracking-[0.4em]">Inventory Core</span>
-                <h1 id="page-title" class="text-3xl font-title uppercase italic">REGISTRO.</h1>
+                <span class="text-[#FF8801] text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.4em]">Inventory Core</span>
+                <h1 id="page-title" class="text-2xl sm:text-3xl font-title uppercase italic">REGISTRO.</h1>
             </div>
-            <a href="dashboard.html" class="p-3 bg-gray-50 rounded-full hover:bg-gray-200 transition-colors">
-                <i class="fa-solid fa-xmark text-gray-400"></i>
+            <a href="dashboard.html" class="neu-card-sm neu-pressable p-3 flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-xmark text-muted"></i>
             </a>
         </header>
 
-        <form id="multi-form" class="space-y-8">
+        <form id="multi-form" class="space-y-6 sm:space-y-8">
             <section class="space-y-4">
                 <label>01. GALERÍA (ARRASTRA PARA REORDENAR)</label>
-                <div id="drop-zone" class="relative border-2 border-dashed border-gray-200 rounded-[30px] p-6 text-center bg-gray-50/50 overflow-hidden min-h-[150px]">
-                    <input type="file" id="photos" multiple accept="image/*" 
-                           class="absolute inset-0 opacity-0 cursor-pointer z-0" 
+                <div id="drop-zone" class="neu-inset relative p-5 sm:p-6 text-center overflow-hidden min-h-[150px]">
+                    <input type="file" id="photos" multiple accept="image/*"
+                           class="absolute inset-0 opacity-0 cursor-pointer z-0"
                            onchange="handleFiles(this)">
-                    
+
                     <div id="preview-container" class="grid grid-cols-3 md:grid-cols-4 gap-3 hidden relative z-20"></div>
-                    
+
                     <div id="upload-placeholder" class="py-6 pointer-events-none">
-                        <i class="fa-solid fa-camera text-gray-200 text-3xl mb-2"></i>
-                        <p class="text-[10px] font-mono text-gray-400 uppercase">Toca o arrastra para subir fotos</p>
+                        <i class="fa-solid fa-camera text-muted text-3xl mb-2"></i>
+                        <p class="text-[10px] font-mono text-muted uppercase">Toca o arrastra para subir fotos</p>
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center mt-2">
-                    <p class="text-[9px] text-gray-400 font-bold uppercase">La primera foto será la portada</p>
-                    <button type="button" id="btn-escanear" onclick="escanearFoto()" class="btn-ai px-6 py-3 text-[10px] uppercase tracking-widest flex items-center gap-2">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mt-2">
+                    <p class="text-[9px] text-muted font-bold uppercase">La primera foto será la portada</p>
+                    <button type="button" id="btn-escanear" onclick="escanearFoto()" class="btn-ai px-6 py-3 text-[10px] uppercase tracking-widest flex items-center gap-2 w-full sm:w-auto justify-center">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Completar con IA
                     </button>
                 </div>
             </section>
 
-            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                 <div><label>Marca</label><input type="text" id="brand" required></div>
                 <div><label>Modelo</label><input type="text" id="model" required></div>
                 <div><label>Año</label><input type="number" id="year" required></div>
             </section>
 
             <!-- SE AGREGÓ EL CAMPO TIPO AQUÍ PARA LOS FILTROS -->
-            <section class="grid grid-cols-2 md:grid-cols-5 gap-6">
+            <section class="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6">
                 <div><label>Tipo (Filtro)</label>
                     <select id="type">
                         <option value="SUV">SUV</option>
@@ -102,12 +116,12 @@
                 <div><label>KM</label><input type="number" id="mileage"></div>
             </section>
 
-            <section class="bg-gray-50 p-6 rounded-[30px] grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section class="neu-inset p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div><label>Costo ($)</label><input type="number" id="cost_total"></div>
                 <div><label class="text-[#FF8801]">Precio Venta ($)</label><input type="number" id="price_sale" required></div>
             </section>
 
-            <button type="submit" id="submit-btn" class="btn-primary w-full py-6 text-[12px] uppercase tracking-[0.3em]">PUBLICAR UNIDAD</button>
+            <button type="submit" id="submit-btn" class="btn-primary w-full py-5 sm:py-6 text-[11px] sm:text-[12px] uppercase tracking-[0.3em]">PUBLICAR UNIDAD</button>
         </form>
     </main>
 

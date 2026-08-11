@@ -14,78 +14,83 @@
     <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@1,900&family=Montserrat:wght@400;700;900&family=Roboto+Mono&display=swap" rel="stylesheet"/>
 
     <style>
-        body { 
-            background-color: #FFFFFF; 
-            color: #111; 
-            font-family: 'Montserrat', sans-serif;
-            background-image: radial-gradient(#f0f0f0 1px, transparent 1px);
-            background-size: 40px 40px;
+        :root {
+            --neu-bg: #e7e8ee;
+            --neu-text: #35354a;
+            --neu-text-muted: #8890a3;
+            --neu-light: #ffffff;
+            --neu-dark: #c3c5d1;
         }
+        body { background-color: var(--neu-bg); color: var(--neu-text); font-family: 'Montserrat', sans-serif; }
         .font-epilogue { font-family: 'Epilogue', sans-serif; }
         .text-orange-envolvia { color: #FF8801; }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(0,0,0,0.05); border-radius: 32px; }
-        
+        .text-muted { color: var(--neu-text-muted); }
+        .neu-card { background: var(--neu-bg); border-radius: 32px; box-shadow: 8px 8px 16px var(--neu-dark), -8px -8px 16px var(--neu-light); }
+        .neu-card-sm { background: var(--neu-bg); border-radius: 18px; box-shadow: 6px 6px 12px var(--neu-dark), -6px -6px 12px var(--neu-light); transition: all .2s; }
+        .neu-inset { background: var(--neu-bg); border-radius: 18px; box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); }
+        .neu-pressable:active { box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); transform: scale(0.98); }
+
         /* Zona de arrastrar y soltar */
-        .drop-zone { border: 2px dashed #e5e7eb; transition: all 0.3s ease; }
-        .drop-zone.dragover { border-color: #FF8801; background-color: #fffaf5; }
+        .drop-zone { transition: all 0.3s ease; }
+        .drop-zone.dragover { box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); }
     </style>
 </head>
-<body class="pb-20">
+<body class="pb-20 p-3 sm:p-6 md:p-8">
 
-    <header class="max-w-[1200px] mx-auto p-8 flex justify-between items-center">
-        <div class="flex items-center gap-6">
-            <a href="dashboard.html" class="w-12 h-12 flex items-center justify-center rounded-2xl border border-gray-100 hover:bg-black hover:text-white transition-all">
+    <header class="max-w-[1200px] mx-auto p-2 sm:p-6 flex justify-between items-center gap-4">
+        <div class="flex items-center gap-4 sm:gap-6">
+            <a href="dashboard.html" class="neu-card-sm neu-pressable w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-chevron-left"></i>
             </a>
             <div>
-                <span class="text-gray-400 font-mono text-[9px] tracking-[0.5em] uppercase block mb-1">Data Entry Automation</span>
-                <h1 class="text-4xl font-epilogue font-black italic tracking-tighter uppercase leading-none">
+                <span class="text-muted font-mono text-[8px] sm:text-[9px] tracking-[0.3em] sm:tracking-[0.5em] uppercase block mb-1">Data Entry Automation</span>
+                <h1 class="text-2xl sm:text-4xl font-epilogue font-black italic tracking-tighter uppercase leading-none">
                     DATA <span class="text-orange-envolvia">IMPORT</span>
                 </h1>
             </div>
         </div>
     </header>
 
-    <main class="max-w-[1200px] mx-auto p-8">
-        
-        <div class="glass-card p-12 text-center mb-8 drop-zone" id="drop-zone">
-            <div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fa-solid fa-file-csv text-3xl text-orange-envolvia"></i>
+    <main class="max-w-[1200px] mx-auto p-2 sm:p-6 md:p-8">
+
+        <div class="neu-card p-6 sm:p-12 text-center mb-8 drop-zone" id="drop-zone">
+            <div class="neu-card-sm w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-file-csv text-2xl sm:text-3xl text-orange-envolvia"></i>
             </div>
-            <h2 class="text-2xl font-black uppercase italic mb-2">Sube tu Inventario (.CSV)</h2>
-            <p class="text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-8">Exporta tu Google Sheets como "Valores separados por comas"</p>
-            
+            <h2 class="text-lg sm:text-2xl font-black uppercase italic mb-2">Sube tu Inventario (.CSV)</h2>
+            <p class="text-[9px] sm:text-[10px] font-mono text-muted uppercase tracking-widest mb-8">Exporta tu Google Sheets como "Valores separados por comas"</p>
+
             <input type="file" id="csv-file" accept=".csv" class="hidden" onchange="procesarArchivo(event)">
-            <label for="csv-file" class="bg-black text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-envolvia transition-all cursor-pointer shadow-xl">
+            <label for="csv-file" class="neu-card-sm neu-pressable inline-block bg-black text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-envolvia transition-all cursor-pointer">
                 Seleccionar Archivo
             </label>
         </div>
 
-        <div id="preview-section" class="hidden glass-card p-8">
-            <div class="flex justify-between items-end mb-6 border-b border-gray-100 pb-6">
+        <div id="preview-section" class="hidden neu-card p-4 sm:p-8">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-end mb-6 border-b border-black/5 pb-6 gap-4">
                 <div>
-                    <h3 class="text-xl font-black uppercase italic">Vista Previa de Datos</h3>
-                    <p class="text-[10px] font-mono text-gray-400 uppercase tracking-widest mt-1">Verifica antes de inyectar a la base de datos</p>
+                    <h3 class="text-lg sm:text-xl font-black uppercase italic">Vista Previa de Datos</h3>
+                    <p class="text-[9px] sm:text-[10px] font-mono text-muted uppercase tracking-widest mt-1">Verifica antes de inyectar a la base de datos</p>
                 </div>
                 <div class="flex gap-4">
-                    <button onclick="cancelarImportacion()" class="px-6 py-3 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50">Cancelar</button>
-                    <button id="btn-upload" onclick="subirASupabase()" class="px-6 py-3 bg-[#FF8801] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg flex items-center gap-2">
+                    <button onclick="cancelarImportacion()" class="neu-card-sm neu-pressable px-4 sm:px-6 py-3 text-[10px] font-black uppercase tracking-widest">Cancelar</button>
+                    <button id="btn-upload" onclick="subirASupabase()" class="neu-card-sm neu-pressable px-4 sm:px-6 py-3 bg-[#FF8801] text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                         <i class="fa-solid fa-cloud-arrow-up"></i> Importar <span id="contador-filas">0</span> Unidades
                     </button>
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto neu-inset p-2">
                 <table class="w-full text-left text-[10px] uppercase font-bold">
-                    <thead class="bg-gray-50 text-gray-400">
+                    <thead class="text-muted">
                         <tr>
-                            <th class="p-4 rounded-tl-xl">Marca</th>
+                            <th class="p-4">Marca</th>
                             <th class="p-4">Modelo</th>
                             <th class="p-4">Año</th>
                             <th class="p-4">Color</th>
                             <th class="p-4">Transmisión</th>
                             <th class="p-4">KM</th>
-                            <th class="p-4 rounded-tr-xl">Precio</th>
+                            <th class="p-4">Precio</th>
                         </tr>
                     </thead>
                     <tbody id="preview-body"></tbody>
@@ -165,12 +170,12 @@
             
             // Mostrar solo las primeras 100 filas en la vista previa para no colapsar el navegador
             tbody.innerHTML = datosAImportar.slice(0, 100).map(u => `
-                <tr class="border-b border-gray-50">
-                    <td class="p-3 text-black">${u.marca}</td>
-                    <td class="p-3 text-black">${u.modelo}</td>
-                    <td class="p-3 text-gray-500">${u.anio}</td>
-                    <td class="p-3 text-gray-500">${u.color}</td>
-                    <td class="p-3 text-gray-500">${u.transmision}</td>
+                <tr class="border-b border-black/5">
+                    <td class="p-3 text-[var(--neu-text)]">${u.marca}</td>
+                    <td class="p-3 text-[var(--neu-text)]">${u.modelo}</td>
+                    <td class="p-3 text-muted">${u.anio}</td>
+                    <td class="p-3 text-muted">${u.color}</td>
+                    <td class="p-3 text-muted">${u.transmision}</td>
                     <td class="p-3 font-mono">${u.kilometraje.toLocaleString()}</td>
                     <td class="p-3 font-epilogue italic text-[#FF8801]">$${u.precio_venta.toLocaleString()}</td>
                 </tr>

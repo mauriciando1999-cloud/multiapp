@@ -7,60 +7,73 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #ffffff; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        :root {
+            --neu-bg: #e7e8ee;
+            --neu-text: #35354a;
+            --neu-text-muted: #8890a3;
+            --neu-light: #ffffff;
+            --neu-dark: #c3c5d1;
+        }
+        body { background-color: var(--neu-bg); color: var(--neu-text); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
         .font-title { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; letter-spacing: -0.05em; }
-        .bg-grid { background-image: radial-gradient(circle, #f0f0f0 1px, transparent 1px); background-size: 30px 30px; }
-        .time-btn.active { border-color: #FF8801; color: #FF8801; background-color: #fffaf5; }
+        .text-muted { color: var(--neu-text-muted); }
+        .neu-card { background: var(--neu-bg); border-radius: 40px; box-shadow: 10px 10px 20px var(--neu-dark), -10px -10px 20px var(--neu-light); }
+        .neu-card-sm { background: var(--neu-bg); border-radius: 999px; box-shadow: 6px 6px 12px var(--neu-dark), -6px -6px 12px var(--neu-light); transition: all 0.2s ease; }
+        .neu-inset { background: var(--neu-bg); border-radius: 30px; box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); }
+        .neu-pressable:active { box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); transform: scale(0.98); }
+        .time-btn { background: var(--neu-bg); box-shadow: 4px 4px 8px var(--neu-dark), -4px -4px 8px var(--neu-light); transition: all .2s; }
+        .time-btn.active { color: #FF8801; box-shadow: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light); }
+        .day-btn { transition: all .2s; }
         .day-btn.active { background-color: #FF8801; color: white; transform: scale(1.1); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+
         /* Animación suave para la entrada de datos */
         #detalle-container { animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-grid min-h-screen p-4 md:p-12">
+<body class="min-h-screen p-3 sm:p-4 md:p-12">
 
     <main class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-12">
-            <button onclick="window.location.href='dashboard.html'" class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-black transition-colors">
+        <header class="flex justify-between items-center mb-8 sm:mb-12 gap-3 pt-2">
+            <button onclick="window.location.href='dashboard.html'" class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-muted hover:text-black transition-colors">
                 ← Regresar a Central
             </button>
-            <div id="status-badge" class="bg-orange-100 text-[#FF8801] px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">
+            <div id="status-badge" class="bg-orange-100 text-[#FF8801] px-4 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest flex-shrink-0">
                 Pendiente de Revisión
             </div>
         </header>
 
-        <div id="detalle-container" class="space-y-12">
+        <div id="detalle-container" class="space-y-8 sm:space-y-12">
             <div class="animate-pulse flex flex-col gap-8">
-                <div class="h-20 bg-gray-100 rounded-3xl w-2/3"></div>
-                <div class="h-96 bg-gray-50 rounded-[50px]"></div>
+                <div class="h-20 bg-black/5 rounded-3xl w-2/3"></div>
+                <div class="h-96 bg-black/5 rounded-[50px]"></div>
             </div>
         </div>
     </main>
 
-    <div id="modal-cita" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white w-full max-w-lg rounded-[50px] p-8 shadow-2xl my-8 relative">
+    <div id="modal-cita" class="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="neu-card w-full max-w-lg p-6 sm:p-8 my-8 relative">
             <header class="text-center mb-8">
-                <h3 class="text-3xl font-title italic uppercase tracking-tighter">Agenda tu <span class="text-[#FF8801]">Visita</span></h3>
-                <p class="text-[9px] text-gray-400 uppercase tracking-[0.3em] mt-2 font-bold">Inspección física del vehículo</p>
+                <h3 class="text-2xl sm:text-3xl font-title italic uppercase tracking-tighter">Agenda tu <span class="text-[#FF8801]">Visita</span></h3>
+                <p class="text-[9px] text-muted uppercase tracking-[0.2em] sm:tracking-[0.3em] mt-2 font-bold">Inspección física del vehículo</p>
             </header>
 
             <div class="mb-8">
-                <div class="grid grid-cols-7 text-center text-[9px] font-black text-gray-300 uppercase mb-4">
+                <div class="grid grid-cols-7 text-center text-[9px] font-black text-muted uppercase mb-4">
                     <div>Dom</div><div>Lun</div><div>Mar</div><div>Mie</div><div>Jue</div><div>Vie</div><div>Sab</div>
                 </div>
                 <div id="calendar-days" class="grid grid-cols-7 gap-2 text-center"></div>
             </div>
 
-            <div class="bg-gray-50 rounded-[40px] p-6 border border-gray-100">
+            <div class="neu-inset p-5 sm:p-6">
                 <div class="grid grid-cols-3 gap-2 mb-4" id="time-grid">
-                    <button onclick="selectTime('08:00 AM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">08:00 AM</button>
-                    <button onclick="selectTime('10:00 AM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">10:00 AM</button>
-                    <button onclick="selectTime('12:00 PM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">12:00 PM</button>
-                    <button onclick="selectTime('02:00 PM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">02:00 PM</button>
-                    <button onclick="selectTime('04:00 PM', this)" class="time-btn bg-white py-2 rounded-xl text-[10px] font-bold border border-transparent">04:00 PM</button>
+                    <button onclick="selectTime('08:00 AM', this)" class="time-btn py-2 rounded-xl text-[10px] font-bold">08:00 AM</button>
+                    <button onclick="selectTime('10:00 AM', this)" class="time-btn py-2 rounded-xl text-[10px] font-bold">10:00 AM</button>
+                    <button onclick="selectTime('12:00 PM', this)" class="time-btn py-2 rounded-xl text-[10px] font-bold">12:00 PM</button>
+                    <button onclick="selectTime('02:00 PM', this)" class="time-btn py-2 rounded-xl text-[10px] font-bold">02:00 PM</button>
+                    <button onclick="selectTime('04:00 PM', this)" class="time-btn py-2 rounded-xl text-[10px] font-bold">04:00 PM</button>
                 </div>
                 <div class="text-center">
                     <div class="inline-block bg-black text-white text-[10px] font-mono px-4 py-2 rounded-lg" id="final-selection">SELECCIONA DÍA Y HORA</div>
@@ -70,7 +83,7 @@
             <button id="btn-confirmar" onclick="confirmarCitaFinal(event)" class="w-full bg-black text-white py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] mt-6 hover:bg-[#FF8801] transition-all shadow-xl">
                 Confirmar y Notificar
             </button>
-            <button onclick="document.getElementById('modal-cita').classList.add('hidden')" class="w-full text-gray-300 text-[10px] font-bold uppercase mt-4 tracking-widest">Cerrar</button>
+            <button onclick="document.getElementById('modal-cita').classList.add('hidden')" class="w-full text-muted text-[10px] font-bold uppercase mt-4 tracking-widest">Cerrar</button>
         </div>
     </div>
 
@@ -112,65 +125,65 @@
 
             const fotosHtml = (c.fotos && c.fotos.length > 0) ? `
                 <div class="space-y-4">
-                    <div class="relative rounded-[40px] overflow-hidden shadow-2xl bg-gray-100 border border-gray-100">
+                    <div class="relative rounded-[32px] sm:rounded-[40px] overflow-hidden shadow-2xl bg-gray-100">
                         <img id="main-img-solicitud" src="${getFotoUrl(c.fotos[0])}" class="w-full aspect-[4/3] object-cover">
                     </div>
                     <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                         ${c.fotos.map(f => `
-                            <img src="${getFotoUrl(f)}" onclick="document.getElementById('main-img-solicitud').src='${getFotoUrl(f)}'" 
-                                class="w-24 h-20 rounded-2xl object-cover cursor-pointer hover:ring-2 ring-orange-500 transition-all opacity-70 hover:opacity-100">
+                            <img src="${getFotoUrl(f)}" onclick="document.getElementById('main-img-solicitud').src='${getFotoUrl(f)}'"
+                                class="w-24 h-20 rounded-2xl object-cover cursor-pointer hover:ring-2 ring-orange-500 transition-all opacity-70 hover:opacity-100 flex-shrink-0">
                         `).join('')}
                     </div>
                 </div>
             ` : `
-                <div class="h-96 bg-gray-50 rounded-[40px] flex items-center justify-center border-2 border-dashed border-gray-100">
-                    <p class="text-gray-300 font-black uppercase text-[10px] tracking-widest">El cliente no adjuntó fotos</p>
+                <div class="neu-inset h-96 flex items-center justify-center">
+                    <p class="text-muted font-black uppercase text-[10px] tracking-widest">El cliente no adjuntó fotos</p>
                 </div>
             `;
 
             document.getElementById('detalle-container').innerHTML = `
                 <section>
-                    <h1 class="text-5xl md:text-7xl font-title uppercase leading-[0.8] mb-6">${c.vehiculo}</h1>
+                    <h1 class="text-3xl sm:text-5xl md:text-7xl font-title uppercase leading-[0.9] sm:leading-[0.8] mb-4 sm:mb-6">${c.vehiculo}</h1>
                     <div class="flex items-center gap-4">
-                        <span class="text-xl font-mono text-gray-400 uppercase">Año ${c.ano}</span>
-                        <div class="h-2 w-2 bg-gray-200 rounded-full"></div>
-                        <span class="text-3xl font-title text-[#FF8801] italic">${currency.format(c.precio)}</span>
+                        <span class="text-base sm:text-xl font-mono text-muted uppercase">Año ${c.ano}</span>
+                        <div class="h-2 w-2 bg-black/10 rounded-full flex-shrink-0"></div>
+                        <span class="text-xl sm:text-3xl font-title text-[#FF8801] italic">${currency.format(c.precio)}</span>
                     </div>
                 </section>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-12">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 mt-8 sm:mt-12">
                     ${fotosHtml}
 
-                    <div class="space-y-8">
-                        <div class="bg-gray-50 p-8 rounded-[40px] border border-gray-100">
-                            <label class="text-[10px] font-black uppercase tracking-widest text-gray-300 block mb-4">Datos del Propietario</label>
-                            <h2 class="text-3xl font-black uppercase">${c.nombre}</h2>
-                            <p class="text-sm font-mono text-gray-400 mt-1">${c.telefono || 'Teléfono no registrado'}</p>
-                            ${telLimpio ? `<a href="https://wa.me/${telLimpio}" target="_blank" class="inline-block mt-4 text-[10px] font-bold text-[#FF8801] uppercase tracking-widest border-b-2 border-orange-100 hover:border-[#FF8801] transition-all">Chat Directo WhatsApp →</a>` : ''}
+                    <div class="space-y-6 sm:space-y-8">
+                        <div class="neu-inset p-6 sm:p-8">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-muted block mb-4">Datos del Propietario</label>
+                            <h2 class="text-2xl sm:text-3xl font-black uppercase">${c.nombre}</h2>
+                            <p class="text-sm font-mono text-muted mt-1">${c.telefono || 'Teléfono no registrado'}</p>
+                            ${telLimpio ? `<a href="https://wa.me/${telLimpio}" target="_blank" class="inline-block mt-4 text-[10px] font-bold text-[#FF8801] uppercase tracking-widest border-b-2 border-orange-200 hover:border-[#FF8801] transition-all">Chat Directo WhatsApp →</a>` : ''}
                         </div>
-                        
+
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="p-6 bg-white border border-gray-50 rounded-[30px] shadow-sm">
-                                <label class="text-[9px] font-black text-gray-300 uppercase block mb-1">Kilometraje</label>
-                                <p class="text-xl font-bold italic">${c.km?.toLocaleString() || 0} KM</p>
+                            <div class="neu-card-sm rounded-[24px] sm:rounded-[30px] p-5 sm:p-6">
+                                <label class="text-[9px] font-black text-muted uppercase block mb-1">Kilometraje</label>
+                                <p class="text-lg sm:text-xl font-bold italic">${c.km?.toLocaleString() || 0} KM</p>
                             </div>
-                            <div class="p-6 bg-white border border-gray-50 rounded-[30px] shadow-sm">
-                                <label class="text-[9px] font-black text-gray-300 uppercase block mb-1">Estatus</label>
+                            <div class="neu-card-sm rounded-[24px] sm:rounded-[30px] p-5 sm:p-6">
+                                <label class="text-[9px] font-black text-muted uppercase block mb-1">Estatus</label>
                                 <p class="text-[11px] font-black uppercase text-[#FF8801]">${c.estatus}</p>
                             </div>
                         </div>
 
-                        <div class="p-6 bg-gray-50 rounded-[30px]">
-                            <label class="text-[9px] font-black text-gray-300 uppercase block mb-2">Comentarios / Detalles</label>
-                            <p class="text-sm text-gray-600 leading-relaxed">${c.detalles || 'Sin detalles adicionales proporcionados.'}</p>
+                        <div class="neu-inset p-5 sm:p-6">
+                            <label class="text-[9px] font-black text-muted uppercase block mb-2">Comentarios / Detalles</label>
+                            <p class="text-sm text-muted leading-relaxed">${c.detalles || 'Sin detalles adicionales proporcionados.'}</p>
                         </div>
 
                         <div class="flex flex-col md:flex-row gap-4 mt-8">
-                            <button onclick="document.getElementById('modal-cita').classList.remove('hidden')" class="w-full md:w-1/2 bg-black text-white p-6 rounded-[30px] font-title italic text-lg uppercase hover:bg-[#FF8801] transition-all shadow-xl">
+                            <button onclick="document.getElementById('modal-cita').classList.remove('hidden')" class="w-full md:w-1/2 bg-black text-white p-5 sm:p-6 rounded-[24px] sm:rounded-[30px] font-title italic text-base sm:text-lg uppercase hover:bg-[#FF8801] transition-all shadow-xl">
                                 📅 Agendar Cita
                             </button>
-                            
-                            <button onclick="publicarEnShowroom()" class="w-full md:w-1/2 bg-[#25D366] text-white p-6 rounded-[30px] font-title italic text-lg uppercase hover:bg-green-500 transition-all shadow-xl">
+
+                            <button onclick="publicarEnShowroom()" class="w-full md:w-1/2 bg-[#25D366] text-white p-5 sm:p-6 rounded-[24px] sm:rounded-[30px] font-title italic text-base sm:text-lg uppercase hover:bg-green-500 transition-all shadow-xl">
                                 🌐 Publicar en Web
                             </button>
                         </div>

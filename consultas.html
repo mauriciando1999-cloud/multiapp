@@ -81,6 +81,8 @@
         let miNombre = null;
 
         async function cargarMiNombre() {
+            const cacheado = localStorage.getItem('operador_nombre');
+            if (cacheado) { miNombre = cacheado; return; }
             const { data } = await _supabase.from('vendedores').select('nombre').eq('email', uEmail).maybeSingle();
             miNombre = data?.nombre || null;
         }

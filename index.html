@@ -164,6 +164,19 @@
                 localStorage.setItem('operador_email', emailInput);
                 localStorage.setItem('operador_rol', rolAsignado);
 
+                // Guardamos tambien el slug/nombre del vendedor (si existe
+                // una fila propia en vendedores) para las metricas por
+                // gerente del dashboard y los mensajes de WhatsApp.
+                const { data: vendedorPropio } = await _supabase
+                    .from('vendedores')
+                    .select('slug, nombre')
+                    .eq('email', emailInput)
+                    .maybeSingle();
+                if (vendedorPropio) {
+                    localStorage.setItem('vendedor_slug', vendedorPropio.slug || '');
+                    localStorage.setItem('operador_nombre', vendedorPropio.nombre || '');
+                }
+
                 btn.innerHTML = `<i class="fa-solid fa-unlock"></i> ACCESO CONCEDIDO`;
                 btn.classList.replace('bg-black', 'bg-green-600');
                 setTimeout(() => window.location.href = 'dashboard.html', 800);

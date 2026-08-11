@@ -51,17 +51,47 @@
                 <a href="dashboard.html" class="no-print text-[10px] font-black uppercase tracking-[0.3em] text-muted hover:text-black mb-4 block">← Panel Central</a>
                 <h1 class="text-4xl sm:text-6xl md:text-8xl font-title uppercase leading-[0.8]">ANÁLISIS<br>VENTAS.</h1>
             </div>
-            <div class="flex gap-3 sm:gap-4 w-full md:w-auto">
-                <div class="neu-card stat-card p-4 sm:p-6 flex-1 md:min-w-[180px]">
+            <div class="flex gap-3 sm:gap-4 w-full md:w-auto flex-wrap">
+                <div class="neu-card stat-card p-4 sm:p-6 flex-1 md:min-w-[160px]">
                     <p class="text-[8px] font-black uppercase text-muted tracking-widest mb-2">Volumen Total</p>
                     <p class="text-2xl sm:text-3xl font-title italic" id="total-volumen">$0</p>
                 </div>
-                <div class="neu-card stat-card orange p-4 sm:p-6 flex-1 md:min-w-[180px]">
+                <div class="neu-card stat-card orange p-4 sm:p-6 flex-1 md:min-w-[160px]">
                     <p class="text-[8px] font-black uppercase text-muted tracking-widest mb-2">Cierres Totales</p>
                     <p class="text-2xl sm:text-3xl font-title italic text-[#FF8801]" id="total-ventas">0</p>
                 </div>
+                <div class="neu-card stat-card p-4 sm:p-6 flex-1 md:min-w-[160px]" style="border-left-color:#25D366;">
+                    <p class="text-[8px] font-black uppercase text-muted tracking-widest mb-2">Ventas desde la Web</p>
+                    <p class="text-2xl sm:text-3xl font-title italic text-[#1ea952]" id="pct-web">0%</p>
+                </div>
             </div>
         </header>
+
+        <div id="panel-comisiones" class="neu-card p-5 sm:p-8 mb-8 sm:mb-12 no-print hidden">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Configuración de Comisiones</h3>
+                    <p class="text-[10px] text-muted">Aplica a toda venta nueva que se registre a partir de guardar.</p>
+                </div>
+                <div class="flex flex-wrap items-end gap-4">
+                    <div>
+                        <label class="text-[9px] font-bold text-muted uppercase block mb-1">Comisión Gerente (%)</label>
+                        <input type="number" id="cfg-gerente-pct" min="0" max="100" step="0.1" class="neu-inset w-28 py-3 px-4 text-sm font-bold outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-muted uppercase block mb-1">% de esa comisión que va a la Web</label>
+                        <input type="number" id="cfg-web-pct" min="0" max="100" step="0.1" class="neu-inset w-28 py-3 px-4 text-sm font-bold outline-none">
+                    </div>
+                    <button onclick="guardarComisiones()" id="btn-guardar-comisiones" class="neu-card-sm neu-pressable bg-black text-white px-6 py-3 text-[10px] font-black uppercase tracking-widest">Guardar</button>
+                </div>
+            </div>
+            <p id="msg-comisiones" class="text-[10px] font-bold uppercase mt-3"></p>
+        </div>
+
+        <div id="panel-comisiones-lectura" class="neu-card p-5 sm:p-8 mb-8 sm:mb-12 no-print hidden">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-2 italic">Comisiones Vigentes</h3>
+            <p class="text-xs font-bold">Gerente: <span id="ro-gerente-pct" class="text-black">--</span>% · Web: <span id="ro-web-pct" class="text-black">--</span>% de esa comisión</p>
+        </div>
 
         <div class="flex flex-col md:flex-row gap-4 mb-8 sm:mb-12 no-print">
             <div class="relative flex-1">
@@ -93,6 +123,7 @@
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Fecha</th>
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Vehículo</th>
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Vendedor</th>
+                            <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Origen</th>
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Monto</th>
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Comisión</th>
                         </tr>
@@ -107,6 +138,7 @@
     <script src="config.js"></script>
     <script>
         const _db = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        const uRol = localStorage.getItem('operador_rol');
 
         async function init() {
             const { data: ventas, error } = await _db.from('ventas').select('*').order('created_at', { ascending: true });
@@ -114,25 +146,74 @@
 
             renderStats(ventas);
             renderCharts(ventas);
+            cargarConfigComisiones();
         }
 
         function renderStats(ventas) {
             const body = document.getElementById('tabla-ventas-body');
             let total = 0;
+            let ventasWeb = 0;
             document.getElementById('total-ventas').innerText = ventas.length;
 
             body.innerHTML = [...ventas].reverse().map(v => {
                 total += v.precio_venta;
+                if (v.origen_venta === 'Web') ventasWeb++;
+                const esWeb = v.origen_venta === 'Web';
                 return `
                     <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors venta-row" data-search="${v.vehiculo} ${v.vendedor}">
                         <td class="p-6 text-[10px] font-mono font-bold text-gray-400">${new Date(v.created_at).toLocaleDateString()}</td>
                         <td class="p-6 text-xs font-black uppercase">${v.vehiculo}</td>
                         <td class="p-6 text-xs font-bold text-gray-500 uppercase">${v.vendedor}</td>
+                        <td class="p-6"><span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase ${esWeb ? 'bg-green-50 text-[#1ea952]' : 'bg-gray-100 text-gray-500'}">${v.origen_venta || 'Piso'}</span></td>
                         <td class="p-6 text-sm font-title italic font-black text-black">$${v.precio_venta.toLocaleString()}</td>
-                        <td class="p-6"><span class="bg-orange-50 text-[#FF8801] px-3 py-1 rounded-lg text-[10px] font-black">+$${v.comision}</span></td>
+                        <td class="p-6">
+                            <span class="bg-orange-50 text-[#FF8801] px-3 py-1 rounded-lg text-[10px] font-black">+$${Number(v.comision || 0).toFixed(2)}</span>
+                            ${esWeb ? `<span class="bg-green-50 text-[#1ea952] px-3 py-1 rounded-lg text-[10px] font-black ml-1">Web +$${Number(v.comision_web || 0).toFixed(2)}</span>` : ''}
+                        </td>
                     </tr>`;
             }).join('');
             document.getElementById('total-volumen').innerText = `$${(total / 1000).toFixed(1)}k`;
+            document.getElementById('pct-web').innerText = ventas.length > 0 ? `${Math.round((ventasWeb / ventas.length) * 100)}%` : '0%';
+        }
+
+        async function cargarConfigComisiones() {
+            const { data, error } = await _db.from('configuracion_comisiones').select('*').eq('id', 1).maybeSingle();
+            if (error || !data) return;
+
+            if (uRol === 'admin') {
+                document.getElementById('panel-comisiones').classList.remove('hidden');
+                document.getElementById('cfg-gerente-pct').value = data.comision_gerente_pct;
+                document.getElementById('cfg-web-pct').value = data.comision_web_pct;
+            } else {
+                document.getElementById('panel-comisiones-lectura').classList.remove('hidden');
+                document.getElementById('ro-gerente-pct').innerText = data.comision_gerente_pct;
+                document.getElementById('ro-web-pct').innerText = data.comision_web_pct;
+            }
+        }
+
+        async function guardarComisiones() {
+            const btn = document.getElementById('btn-guardar-comisiones');
+            const msg = document.getElementById('msg-comisiones');
+            const gerentePct = parseFloat(document.getElementById('cfg-gerente-pct').value);
+            const webPct = parseFloat(document.getElementById('cfg-web-pct').value);
+
+            if (isNaN(gerentePct) || isNaN(webPct) || gerentePct < 0 || webPct < 0) {
+                msg.className = 'text-[10px] font-bold uppercase mt-3 text-red-500';
+                msg.innerText = 'Valores inválidos.';
+                return;
+            }
+
+            btn.disabled = true;
+            const { error } = await _db.from('configuracion_comisiones').update({
+                comision_gerente_pct: gerentePct,
+                comision_web_pct: webPct,
+                actualizado_el: new Date().toISOString(),
+                actualizado_por: localStorage.getItem('operador_email')
+            }).eq('id', 1);
+            btn.disabled = false;
+
+            msg.className = `text-[10px] font-bold uppercase mt-3 ${error ? 'text-red-500' : 'text-green-600'}`;
+            msg.innerText = error ? `Error: ${error.message}` : 'Guardado. Aplica a las próximas ventas.';
         }
 
         function renderCharts(ventas) {

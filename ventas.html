@@ -90,22 +90,11 @@
     <main id="grid-ventas" class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
         </main>
 <script>
-    // Sistema de acceso rápido para Admin
-    (function adminGuard() {
-        const ADMIN_KEY = "ENX_2026"; // Cambia esto por tu clave secreta de Envolvia
-        const sessionActive = sessionStorage.getItem('admin_access');
-
-        if (!sessionActive) {
-            const entry = prompt("ACCESO RESTRINGIDO - COMANDO DE FLOTA\nIngrese clave de administrador:");
-            
-            if (entry === ADMIN_KEY) {
-                sessionStorage.setItem('admin_access', 'true');
-            } else {
-                alert("Acceso Denegado.");
-                window.location.href = "inventario.html"; // Lo saca si falla
-            }
-        }
-    })();
+    // Igual que el resto de la app: sesión real via Supabase Auth,
+    // no una clave hardcodeada en el JS del cliente.
+    if (!localStorage.getItem('operador_email')) {
+        window.location.href = 'index.html';
+    }
 </script>
     <script>
         const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);

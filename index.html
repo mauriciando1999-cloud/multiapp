@@ -86,26 +86,9 @@
                 <button onclick="handleAuth()" id="main-btn" class="btn-primary w-full py-5 rounded-2xl font-black uppercase tracking-widest text-xs mt-4">
                     Autorizar Acceso →
                 </button>
-
-                <div class="flex items-center gap-3 my-2">
-                    <div class="flex-1 h-px bg-gray-200"></div>
-                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">o</span>
-                    <div class="flex-1 h-px bg-gray-200"></div>
-                </div>
-
-                <button onclick="loginWithGoogle()" id="google-btn" type="button" class="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all flex items-center justify-center gap-3">
-                    <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.3 2.7l5.7-5.7C33.6 6.5 29 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 15.9 18.9 13 24 13c2.8 0 5.3 1 7.3 2.7l5.7-5.7C33.6 6.5 29 4.5 24 4.5c-7.6 0-14.2 4.3-17.6 10.6z"/><path fill="#4CAF50" d="M24 43.5c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 34.6 26.7 35.5 24 35.5c-5.3 0-9.7-2.6-11.4-6.9l-6.5 5C9.7 39 16.3 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.6l6.2 5.2C40.5 36.4 43.5 30.7 43.5 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
-                    <span id="google-btn-text">Continuar con Google</span>
-                </button>
             </div>
 
             <div id="status-msg" class="text-[10px] font-black uppercase text-center hidden tracking-widest p-4 rounded-xl border"></div>
-        </div>
-
-        <div class="text-center">
-            <button onclick="toggleMode()" id="toggle-btn" class="font-mono text-[9px] uppercase tracking-widest text-gray-600 font-bold hover:text-[#FF8801] transition-colors bg-white/50 backdrop-blur-md px-6 py-2 rounded-full border border-white">
-                ¿Nuevo operador? Solicitar Credenciales
-            </button>
         </div>
     </div>
 
@@ -113,7 +96,6 @@
     <script src="config.js"></script>
     <script>
         const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-        let isRegisterMode = false;
 
         function togglePassword() {
             const input = document.getElementById('password');
@@ -123,13 +105,6 @@
             } else {
                 input.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye');
             }
-        }
-
-        function toggleMode() {
-            isRegisterMode = !isRegisterMode;
-            document.getElementById('main-btn').innerText = isRegisterMode ? "REGISTRAR CREDENCIALES →" : "AUTORIZAR ACCESO →";
-            document.getElementById('toggle-btn').innerText = isRegisterMode ? "Ya tengo acceso - Volver al Login" : "¿Nuevo operador? Solicitar Credenciales";
-            hideStatus();
         }
 
         function showStatus(msg, isError = true) {
@@ -164,104 +139,36 @@
             hideStatus();
 
             try {
-                if (isRegisterMode) {
-                    // VALIDACIÓN DE WHITELIST (via RPC segura)
-                    const { data: rolWhitelist, error: whitelistError } = await _supabase
-                        .rpc('check_whitelist', { p_email: emailInput });
+                const { data, error: loginError } = await _supabase.auth.signInWithPassword({
+                    email: emailInput, password: password
+                });
 
-                    if (whitelistError) throw new Error("Fallo al contactar el servidor de seguridad.");
-                    if (!rolWhitelist) throw new Error("Acceso Denegado: Correo no está en la Whitelist.");
+                if (loginError) throw new Error("Credenciales inválidas o cuenta no registrada.");
 
-                    // REGISTRO
-                    const { data: authData, error: signUpError } = await _supabase.auth.signUp({
-                        email: emailInput, password: password
-                    });
+                // EXTRAER ROL
+                const rolAsignado = await fetchUserRole(emailInput);
 
-                    if (signUpError) {
-                        if (signUpError.message.includes("already registered")) throw new Error("Cuenta existente. Usa Autorizar Acceso.");
-                        throw signUpError;
-                    }
-
-                    showStatus("Credenciales creadas. Redirigiendo...", false);
-                    localStorage.setItem('operador_email', emailInput);
-                    localStorage.setItem('operador_rol', rolWhitelist); // Guardamos el rol al registrar
-                    
-                    setTimeout(() => window.location.href = 'dashboard.html', 1500);
-
-                } else {
-                    // LOGIN NORMAL
-                    const { data, error: loginError } = await _supabase.auth.signInWithPassword({
-                        email: emailInput, password: password
-                    });
-
-                    if (loginError) throw new Error("Credenciales inválidas o cuenta no registrada.");
-
-                    // EXTRAER ROL (Aquí estaba tu fallo original)
-                    const rolAsignado = await fetchUserRole(emailInput);
-
-                    // Verificar permisos
-                    if (rolAsignado !== 'admin' && rolAsignado !== 'gerente') {
-                        await _supabase.auth.signOut();
-                        throw new Error("Su cuenta no tiene privilegios administrativos.");
-                    }
-
-                    // GUARDAR VARIABLES DE SESIÓN
-                    localStorage.setItem('operador_email', emailInput);
-                    localStorage.setItem('operador_rol', rolAsignado);
-                    
-                    btn.innerHTML = `<i class="fa-solid fa-unlock"></i> ACCESO CONCEDIDO`;
-                    btn.classList.replace('bg-black', 'bg-green-600');
-                    setTimeout(() => window.location.href = 'dashboard.html', 800);
+                // Verificar permisos
+                if (rolAsignado !== 'admin' && rolAsignado !== 'gerente') {
+                    await _supabase.auth.signOut();
+                    throw new Error("Su cuenta no tiene privilegios administrativos.");
                 }
+
+                // GUARDAR VARIABLES DE SESIÓN
+                localStorage.setItem('operador_email', emailInput);
+                localStorage.setItem('operador_rol', rolAsignado);
+
+                btn.innerHTML = `<i class="fa-solid fa-unlock"></i> ACCESO CONCEDIDO`;
+                btn.classList.replace('bg-black', 'bg-green-600');
+                setTimeout(() => window.location.href = 'dashboard.html', 800);
 
             } catch (err) {
                 console.error(err);
                 showStatus(err.message);
                 btn.disabled = false;
-                btn.innerText = isRegisterMode ? "REGISTRAR CREDENCIALES →" : "AUTORIZAR ACCESO →";
+                btn.innerText = "AUTORIZAR ACCESO →";
             }
         }
-
-        async function loginWithGoogle() {
-            const btn = document.getElementById('google-btn');
-            const btnText = document.getElementById('google-btn-text');
-            btn.disabled = true;
-            btnText.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Redirigiendo...`;
-            const { error } = await _supabase.auth.signInWithOAuth({
-                provider: 'google',
-                // Vuelve a esta misma página: acá abajo se valida la whitelist
-                // antes de dejar pasar a dashboard.html (Google por sí solo
-                // NO da acceso, solo crea la sesión).
-                options: { redirectTo: window.location.origin + '/index.html' }
-            });
-            if (error) {
-                showStatus(`Fallo SSO: ${error.message}`);
-                btn.disabled = false;
-                btnText.innerText = "Continuar con Google";
-            }
-        }
-
-        // Se ejecuta al volver de un login OAuth (Google). Si hay sesión activa
-        // pero el correo no está en la whitelist con rol admin/gerente, se cierra
-        // la sesión de inmediato: el acceso real lo decide siempre la whitelist,
-        // nunca el solo hecho de tener una cuenta de Google.
-        async function validarSesionOAuth() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) return;
-
-            const rolAsignado = await fetchUserRole(session.user.email);
-            if (rolAsignado !== 'admin' && rolAsignado !== 'gerente') {
-                await _supabase.auth.signOut();
-                showStatus("Acceso Denegado: tu cuenta de Google no tiene privilegios administrativos.");
-                return;
-            }
-
-            localStorage.setItem('operador_email', session.user.email);
-            localStorage.setItem('operador_rol', rolAsignado);
-            window.location.href = 'dashboard.html';
-        }
-
-        document.addEventListener('DOMContentLoaded', validarSesionOAuth);
 
         document.getElementById('password').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleAuth();

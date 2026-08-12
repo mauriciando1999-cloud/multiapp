@@ -230,19 +230,20 @@
         async function cargarRevisiones() {
             const container = document.getElementById('lista-solicitudes');
             try {
-                // TRAEMOS TODO SIN FILTRAR ESTATUS PARA DIAGNOSTICAR
+                // Solo las que todavia necesitan una decision. Las
+                // aprobadas/rechazadas/promovidas ya se resolvieron, no
+                // pertenecen a la bandeja de pendientes por auditar.
                 const { data, error } = await _supabase
                     .from('consignaciones')
                     .select('*')
+                    .in('estatus', ['Pendiente de Revisión', 'Agendado'])
                     .order('created_at', { ascending: false })
                     .limit(10);
 
                 if (error) throw error;
 
-                console.log("Dato crudo de consignaciones:", data); // Abre F12 para ver esto
-
                 if (!data || data.length === 0) {
-                    container.innerHTML = '<p class="text-xs text-muted font-bold mt-10 text-center uppercase">Bandeja Vacía en BD</p>';
+                    container.innerHTML = '<p class="text-xs text-muted font-bold mt-10 text-center uppercase">Sin Pendientes</p>';
                     return;
                 }
 
@@ -252,7 +253,7 @@
                             <div class="w-9 h-9 sm:w-10 sm:h-10 neu-icon-plate flex items-center justify-center text-[#FF8801] font-bold text-xs flex-shrink-0"><i class="fa-solid fa-car"></i></div>
                             <div class="min-w-0">
                                 <p class="text-[10px] sm:text-[11px] font-black uppercase leading-tight truncate">${c.vehiculo || 'SIN VEHÍCULO'}</p>
-                                <p class="text-[8px] sm:text-[9px] text-muted font-bold mt-1 truncate">PROP: ${c.nombre || 'S/N'} | ESTATUS: <span class="text-red-500">${c.estatus || 'VACÍO/NULO'}</span></p>
+                                <p class="text-[8px] sm:text-[9px] text-muted font-bold mt-1 truncate">PROP: ${c.nombre || 'S/N'} · ${c.estatus}</p>
                             </div>
                         </div>
                         <a href="revision_detalle.html?id=${c.id}" class="text-[8px] sm:text-[9px] neu-accent px-3 sm:px-4 py-2 rounded-xl font-black uppercase flex-shrink-0">Auditar</a>

@@ -297,8 +297,8 @@
                 const { error: insErr } = await _supabaseClient.from('ventas').insert([payloadVenta]);
                 if (insErr) throw insErr;
 
-                const { error: delErr } = await _supabaseClient.from('inventario').delete().eq('id', idUnidad);
-                if (delErr) throw delErr;
+                const { error: marcarErr } = await _supabaseClient.rpc('marcar_vehiculo_vendido', { p_id: idUnidad });
+                if (marcarErr) throw marcarErr;
 
                 alert("CIERRE EXITOSO");
                 window.location.href = 'dashboard.html';

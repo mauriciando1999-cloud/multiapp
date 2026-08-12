@@ -58,6 +58,19 @@
             </div>
         </header>
 
+        <div id="card-mi-enlace" class="neu-card p-5 sm:p-6 mb-6 sm:mb-10 hidden">
+            <p class="text-[8px] sm:text-[9px] font-black text-muted uppercase tracking-widest mb-2">
+                <i class="fa-solid fa-link mr-1"></i> Tu enlace personal del Showroom
+            </p>
+            <p class="text-[10px] text-muted mb-4">Compartilo con tus clientes. Todo lo que consulten o agenden usando este link te lo asigna a vos, no al azar.</p>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="neu-inset flex-1 px-4 py-3 text-[11px] sm:text-xs font-bold font-mono truncate" id="texto-mi-enlace">--</div>
+                <button onclick="copiarMiEnlace()" id="btn-copiar-enlace" class="neu-accent neu-pressable px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex-shrink-0 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-copy"></i> Copiar
+                </button>
+            </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-10">
             <div class="neu-card p-4 sm:p-6 flex flex-col justify-between">
                 <span class="text-[8px] sm:text-[9px] font-black text-muted uppercase tracking-widest">Total Asesores</span>
@@ -125,9 +138,29 @@
         const userRol = localStorage.getItem('operador_rol');
         let todosLosVendedores = [];
 
+        const WEB_BASE_URL = 'https://multiamerica-web.vercel.app';
+
         async function initApp() {
             if (!localStorage.getItem('operador_email')) { window.location.href = 'index.html'; return; }
+            mostrarMiEnlace();
             await cargarVendedores();
+        }
+
+        function mostrarMiEnlace() {
+            const miSlug = localStorage.getItem('vendedor_slug');
+            if (!miSlug) return;
+            document.getElementById('texto-mi-enlace').innerText = `${WEB_BASE_URL}/showroom.html?v=${miSlug}`;
+            document.getElementById('card-mi-enlace').classList.remove('hidden');
+        }
+
+        function copiarMiEnlace() {
+            const enlace = document.getElementById('texto-mi-enlace').innerText;
+            navigator.clipboard.writeText(enlace).then(() => {
+                const btn = document.getElementById('btn-copiar-enlace');
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado';
+                setTimeout(() => btn.innerHTML = original, 1800);
+            });
         }
 
         async function cargarVendedores() {

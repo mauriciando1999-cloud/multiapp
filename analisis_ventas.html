@@ -78,7 +78,7 @@
             </div>
         </div>
 
-        <div id="panel-comisiones" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12 no-print hidden">
+        <div id="panel-comisiones" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12 no-print hidden">
             <div class="neu-card p-5 sm:p-8">
                 <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Comisión de Gerentes</h3>
                 <p class="text-[10px] text-muted mb-4">Porcentaje del precio de venta que cobra el gerente por cerrar la operación.</p>
@@ -86,12 +86,18 @@
                 <input type="number" id="cfg-gerente-pct" min="0" max="100" step="0.1" class="neu-inset w-full py-3 px-4 text-sm font-bold outline-none">
             </div>
             <div class="neu-card p-5 sm:p-8" style="border-left: 4px solid #25D366;">
-                <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Comisión por Adquisición de Cliente</h3>
-                <p class="text-[10px] text-muted mb-4">Cuando la venta viene de un lead o consignación de la web, este % (calculado sobre la comisión del gerente) se separa aparte, en vez de quedar todo con el gerente.</p>
-                <label class="text-[9px] font-bold text-muted uppercase block mb-1">% de la comisión del gerente que va a la Web</label>
-                <input type="number" id="cfg-web-pct" min="0" max="100" step="0.1" class="neu-inset w-full py-3 px-4 text-sm font-bold outline-none">
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Adquisición · Leads del Showroom</h3>
+                <p class="text-[10px] text-muted mb-4">Cuando la venta viene de una consulta/cita del showroom hecha por la web, este % de la comisión del gerente se separa aparte.</p>
+                <label class="text-[9px] font-bold text-muted uppercase block mb-1">% de la comisión del gerente</label>
+                <input type="number" id="cfg-web-lead-pct" min="0" max="100" step="0.1" class="neu-inset w-full py-3 px-4 text-sm font-bold outline-none">
             </div>
-            <div class="md:col-span-2 flex items-center justify-between gap-4">
+            <div class="neu-card p-5 sm:p-8" style="border-left: 4px solid #0ea5e9;">
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Adquisición · Consignaciones Web</h3>
+                <p class="text-[10px] text-muted mb-4">Cuando el auto vendido ingresó por una consignación hecha por la web, este % (puede ser distinto al de leads) se separa aparte.</p>
+                <label class="text-[9px] font-bold text-muted uppercase block mb-1">% de la comisión del gerente</label>
+                <input type="number" id="cfg-web-consig-pct" min="0" max="100" step="0.1" class="neu-inset w-full py-3 px-4 text-sm font-bold outline-none">
+            </div>
+            <div class="md:col-span-3 flex items-center justify-between gap-4">
                 <p id="msg-comisiones" class="text-[10px] font-bold uppercase"></p>
                 <button onclick="guardarComisiones()" id="btn-guardar-comisiones" class="neu-card-sm neu-pressable bg-black text-white px-6 py-3 text-[10px] font-black uppercase tracking-widest flex-shrink-0">Guardar Cambios</button>
             </div>
@@ -99,7 +105,7 @@
 
         <div id="panel-comisiones-lectura" class="neu-card p-5 sm:p-8 mb-8 sm:mb-12 no-print hidden">
             <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-2 italic">Comisiones Vigentes</h3>
-            <p class="text-xs font-bold">Gerente: <span id="ro-gerente-pct" class="text-black">--</span>% · Adquisición de Cliente (Web): <span id="ro-web-pct" class="text-black">--</span>% de esa comisión</p>
+            <p class="text-xs font-bold">Gerente: <span id="ro-gerente-pct" class="text-black">--</span>% · Leads Web: <span id="ro-web-lead-pct" class="text-black">--</span>% · Consignaciones Web: <span id="ro-web-consig-pct" class="text-black">--</span>% de esa comisión</p>
         </div>
 
         <div class="flex flex-col md:flex-row gap-4 mb-8 sm:mb-12 no-print">
@@ -172,14 +178,15 @@
                 total += v.precio_venta;
                 totalComisionGerente += Number(v.comision || 0);
                 totalComisionWeb += Number(v.comision_web || 0);
-                if (v.origen_venta === 'Web') ventasWeb++;
-                const esWeb = v.origen_venta === 'Web';
+                const esWeb = (v.origen_venta || '').startsWith('Web');
+                if (esWeb) ventasWeb++;
+                const etiquetaOrigen = (v.origen_venta || 'Piso').replace('-', ' · ');
                 return `
                     <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors venta-row" data-search="${v.vehiculo} ${v.vendedor}">
                         <td class="p-6 text-[10px] font-mono font-bold text-gray-400">${new Date(v.created_at).toLocaleDateString()}</td>
                         <td class="p-6 text-xs font-black uppercase">${v.vehiculo}</td>
                         <td class="p-6 text-xs font-bold text-gray-500 uppercase">${v.vendedor}</td>
-                        <td class="p-6"><span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase ${esWeb ? 'bg-green-50 text-[#1ea952]' : 'bg-gray-100 text-gray-500'}">${v.origen_venta || 'Piso'}</span></td>
+                        <td class="p-6"><span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase whitespace-nowrap ${esWeb ? 'bg-green-50 text-[#1ea952]' : 'bg-gray-100 text-gray-500'}">${etiquetaOrigen}</span></td>
                         <td class="p-6 text-sm font-title italic font-black text-black">$${v.precio_venta.toLocaleString()}</td>
                         <td class="p-6">
                             <span class="bg-orange-50 text-[#FF8801] px-3 py-1 rounded-lg text-[10px] font-black">+$${Number(v.comision || 0).toFixed(2)}</span>
@@ -200,11 +207,13 @@
             if (uRol === 'admin') {
                 document.getElementById('panel-comisiones').classList.remove('hidden');
                 document.getElementById('cfg-gerente-pct').value = data.comision_gerente_pct;
-                document.getElementById('cfg-web-pct').value = data.comision_web_pct;
+                document.getElementById('cfg-web-lead-pct').value = data.comision_web_lead_pct;
+                document.getElementById('cfg-web-consig-pct').value = data.comision_web_consignacion_pct;
             } else {
                 document.getElementById('panel-comisiones-lectura').classList.remove('hidden');
                 document.getElementById('ro-gerente-pct').innerText = data.comision_gerente_pct;
-                document.getElementById('ro-web-pct').innerText = data.comision_web_pct;
+                document.getElementById('ro-web-lead-pct').innerText = data.comision_web_lead_pct;
+                document.getElementById('ro-web-consig-pct').innerText = data.comision_web_consignacion_pct;
             }
         }
 
@@ -212,9 +221,10 @@
             const btn = document.getElementById('btn-guardar-comisiones');
             const msg = document.getElementById('msg-comisiones');
             const gerentePct = parseFloat(document.getElementById('cfg-gerente-pct').value);
-            const webPct = parseFloat(document.getElementById('cfg-web-pct').value);
+            const webLeadPct = parseFloat(document.getElementById('cfg-web-lead-pct').value);
+            const webConsigPct = parseFloat(document.getElementById('cfg-web-consig-pct').value);
 
-            if (isNaN(gerentePct) || isNaN(webPct) || gerentePct < 0 || webPct < 0) {
+            if ([gerentePct, webLeadPct, webConsigPct].some(v => isNaN(v) || v < 0)) {
                 msg.className = 'text-[10px] font-bold uppercase mt-3 text-red-500';
                 msg.innerText = 'Valores inválidos.';
                 return;
@@ -223,7 +233,8 @@
             btn.disabled = true;
             const { error } = await _db.from('configuracion_comisiones').update({
                 comision_gerente_pct: gerentePct,
-                comision_web_pct: webPct,
+                comision_web_lead_pct: webLeadPct,
+                comision_web_consignacion_pct: webConsigPct,
                 actualizado_el: new Date().toISOString(),
                 actualizado_por: localStorage.getItem('operador_email')
             }).eq('id', 1);

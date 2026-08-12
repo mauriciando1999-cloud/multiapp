@@ -156,19 +156,7 @@
                 </div>
             </div>
 
-            <div id="seccion-admin" class="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <div class="neu-card p-4 sm:p-6 flex flex-col h-[300px] sm:h-[350px]">
-                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-black/5">
-                        <h2 class="text-lg sm:text-xl font-title italic uppercase">Revisiones</h2>
-                        <a href="consultas.html" class="text-[8px] sm:text-[9px] font-black uppercase text-muted hover:text-[#FF8801] transition-colors flex items-center gap-1">
-                            Ver Todas <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                    <div id="lista-solicitudes" class="space-y-3 overflow-y-auto flex-1 pr-1 sm:pr-2">
-                        <p class="text-xs text-muted font-mono animate-pulse">Sincronizando...</p>
-                    </div>
-                </div>
-
+            <div id="seccion-admin" class="lg:col-span-12 grid grid-cols-1 gap-4 sm:gap-6">
                 <div class="neu-card p-4 sm:p-6 flex flex-col h-[300px] sm:h-[350px] relative group">
                     <div class="flex justify-between items-center mb-4 pb-2 border-b border-black/5">
                         <h2 class="text-lg sm:text-xl font-title italic uppercase text-blue-600">Talento IA</h2>
@@ -209,7 +197,6 @@
                 document.getElementById('titulo-central').innerText = 'GESTIÓN.';
                 document.getElementById('status-tag').innerText = 'Panel Privado';
             } else {
-                await cargarRevisiones();
                 await cargarTalentos();
             }
         }
@@ -225,44 +212,6 @@
                 const { count: c } = await q;
                 document.getElementById('kpi-c').innerText = c || 0;
             } catch (e) { console.error("KPI Error:", e); }
-        }
-
-        async function cargarRevisiones() {
-            const container = document.getElementById('lista-solicitudes');
-            try {
-                // Solo las que todavia necesitan una decision. Las
-                // aprobadas/rechazadas/promovidas ya se resolvieron, no
-                // pertenecen a la bandeja de pendientes por auditar.
-                const { data, error } = await _supabase
-                    .from('consignaciones')
-                    .select('*')
-                    .in('estatus', ['Pendiente de Revisión', 'Agendado'])
-                    .order('created_at', { ascending: false })
-                    .limit(10);
-
-                if (error) throw error;
-
-                if (!data || data.length === 0) {
-                    container.innerHTML = '<p class="text-xs text-muted font-bold mt-10 text-center uppercase">Sin Pendientes</p>';
-                    return;
-                }
-
-                container.innerHTML = data.map(c => `
-                    <div class="neu-inset p-3 sm:p-4 flex justify-between items-center gap-2">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-9 h-9 sm:w-10 sm:h-10 neu-icon-plate flex items-center justify-center text-[#FF8801] font-bold text-xs flex-shrink-0"><i class="fa-solid fa-car"></i></div>
-                            <div class="min-w-0">
-                                <p class="text-[10px] sm:text-[11px] font-black uppercase leading-tight truncate">${c.vehiculo || 'SIN VEHÍCULO'}</p>
-                                <p class="text-[8px] sm:text-[9px] text-muted font-bold mt-1 truncate">PROP: ${c.nombre || 'S/N'} · ${c.estatus}</p>
-                            </div>
-                        </div>
-                        <a href="revision_detalle.html?id=${c.id}" class="text-[8px] sm:text-[9px] neu-accent px-3 sm:px-4 py-2 rounded-xl font-black uppercase flex-shrink-0">Auditar</a>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error("Error BD Revisiones:", e);
-                container.innerHTML = `<p class="text-[10px] text-red-500">Error: ${e.message}</p>`;
-            }
         }
 
         async function cargarTalentos() {
@@ -335,37 +284,61 @@
             const container = document.getElementById('lista-leads-preview');
             if (!container) return;
             try {
-                let q = _supabase.from('consultas_showroom').select('*').eq('estatus', 'Pendiente').order('creado_el', { ascending: false }).limit(5);
-                if (uRol === 'gerente') q = q.eq('gerente_email', uEmail);
+                let qLeads = _supabase.from('consultas_showroom').select('*').eq('estatus', 'Pendiente').order('creado_el', { ascending: false }).limit(5);
+                if (uRol === 'gerente') qLeads = qLeads.eq('gerente_email', uEmail);
 
-                const { data, error } = await q;
-                if (error) throw error;
+                const [{ data: leads, error: errLeads }, { data: consig, error: errConsig }] = await Promise.all([
+                    qLeads,
+                    _supabase.from('consignaciones').select('*').in('estatus', ['Pendiente de Revisión', 'Agendado']).order('created_at', { ascending: false }).limit(5)
+                ]);
+                if (errLeads) throw errLeads;
 
-                if (!data || data.length === 0) {
-                    container.innerHTML = '<p class="text-xs text-muted font-bold mt-10 text-center uppercase">Sin Leads Pendientes</p>';
+                const items = [
+                    ...(leads || []).map(l => ({ _tipo: 'lead', _fecha: l.creado_el, data: l })),
+                    ...(errConsig ? [] : (consig || []).map(c => ({ _tipo: 'consignacion', _fecha: c.created_at, data: c })))
+                ].sort((a, b) => new Date(b._fecha) - new Date(a._fecha)).slice(0, 6);
+
+                if (items.length === 0) {
+                    container.innerHTML = '<p class="text-xs text-muted font-bold mt-10 text-center uppercase">Sin Pendientes</p>';
                     return;
                 }
 
-                container.innerHTML = data.map(l => {
-                    const mensajeWa = construirMensajeWa(l);
-                    const waLink = l.cliente_telefono
-                        ? `https://wa.me/${l.cliente_telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensajeWa)}`
-                        : null;
-                    return `
-                    <div class="neu-inset p-3 sm:p-4 flex justify-between items-center gap-2">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-9 h-9 sm:w-10 sm:h-10 neu-icon-plate flex items-center justify-center text-[#FF8801] text-xs flex-shrink-0"><i class="fa-solid fa-headset"></i></div>
-                            <div class="min-w-0">
-                                <p class="text-[10px] sm:text-[11px] font-black uppercase leading-tight truncate">${escapeHtml(l.cliente_nombre) || 'Sin nombre'}</p>
-                                <p class="text-[8px] sm:text-[9px] text-muted font-bold mt-1 truncate">${escapeHtml((l.vehiculos || []).join(', ')) || 'Sin vehículos'}</p>
-                            </div>
-                        </div>
-                        ${waLink ? `<a href="${waLink}" target="_blank" onclick="marcarContactadoPreview('${l.id}')" class="neu-card-sm neu-pressable bg-[#25D366] text-white w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full flex-shrink-0"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
-                    </div>`;
-                }).join('');
+                container.innerHTML = items.map(item => item._tipo === 'lead' ? renderPreviewLead(item.data) : renderPreviewConsignacion(item.data)).join('');
             } catch (e) {
                 container.innerHTML = `<p class="text-[10px] text-red-500">Error: ${e.message}</p>`;
             }
+        }
+
+        function renderPreviewLead(l) {
+            const mensajeWa = construirMensajeWa(l);
+            const waLink = l.cliente_telefono
+                ? `https://wa.me/${l.cliente_telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensajeWa)}`
+                : null;
+            return `
+            <div class="neu-inset p-3 sm:p-4 flex justify-between items-center gap-2 border-l-4 border-purple-400">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 neu-icon-plate flex items-center justify-center text-purple-500 text-xs flex-shrink-0"><i class="fa-solid fa-headset"></i></div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] sm:text-[11px] font-black uppercase leading-tight truncate">${escapeHtml(l.cliente_nombre) || 'Sin nombre'}</p>
+                        <p class="text-[8px] sm:text-[9px] text-muted font-bold mt-1 truncate">${escapeHtml((l.vehiculos || []).join(', ')) || 'Sin vehículos'}</p>
+                    </div>
+                </div>
+                ${waLink ? `<a href="${waLink}" target="_blank" onclick="marcarContactadoPreview('${l.id}')" class="neu-card-sm neu-pressable bg-[#25D366] text-white w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full flex-shrink-0"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+            </div>`;
+        }
+
+        function renderPreviewConsignacion(c) {
+            return `
+            <a href="revision_detalle.html?id=${c.id}" class="neu-inset p-3 sm:p-4 flex justify-between items-center gap-2 border-l-4 border-emerald-400">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 neu-icon-plate flex items-center justify-center text-emerald-600 text-xs flex-shrink-0"><i class="fa-solid fa-car-side"></i></div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] sm:text-[11px] font-black uppercase leading-tight truncate">${escapeHtml(c.vehiculo) || 'Sin vehículo'}</p>
+                        <p class="text-[8px] sm:text-[9px] text-muted font-bold mt-1 truncate">${escapeHtml(c.nombre) || 'Sin nombre'} · ${escapeHtml(c.estatus)}</p>
+                    </div>
+                </div>
+                <span class="neu-card-sm w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full flex-shrink-0 text-muted"><i class="fa-solid fa-chevron-right text-xs"></i></span>
+            </a>`;
         }
 
         async function marcarContactadoPreview(id) {

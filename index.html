@@ -103,6 +103,15 @@
     <script>
         const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
 
+        // Si ya hay una sesión guardada (login previo), saltamos directo al
+        // dashboard. Sin esto, como index.html es el start_url de la PWA,
+        // cada vez que se abre la app instalada te manda al login de nuevo
+        // aunque la sesión siga viva — se siente como si "no recordara" al
+        // usuario cuando en realidad nadie revisaba si ya estaba logueado.
+        if (localStorage.getItem('operador_email')) {
+            window.location.href = 'dashboard.html';
+        }
+
         function togglePassword() {
             const input = document.getElementById('password');
             const icon = document.getElementById('eye-icon');

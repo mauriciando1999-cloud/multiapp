@@ -46,10 +46,22 @@ function construirNotificacion(table: string, record: any) {
         cuerpo: `${record.nombre || 'Un cliente'} quiere consignar su ${record.vehiculo || 'vehículo'}`,
         url: `/revision_detalle.html?id=${record.id}`
       }
+    case 'ventas':
+      return {
+        tipo: 'venta',
+        titulo: '💰 Venta Cerrada',
+        cuerpo: `${record.vehiculo || 'Un vehículo'} se vendió por $${Number(record.precio_venta || 0).toLocaleString()}`,
+        url: '/analisis_ventas.html'
+      }
     default:
       return null
   }
 }
+
+// Por ahora estos tipos solo le llegan al admin (curriculums los gestiona
+// solo el admin, y ventas es info gerencial). El resto le llega a
+// cualquiera que lo haya activado en sus preferencias.
+const TIPOS_SOLO_ADMIN = new Set(['curriculum', 'venta'])
 
 Deno.serve(async (req) => {
   try {
@@ -63,13 +75,21 @@ Deno.serve(async (req) => {
     if (!notif) return new Response('Tabla no soportada, nada que notificar', { status: 200 })
 
     const supabase = createClient(SB_URL, SB_SERVICE_ROLE)
-    const { data: subs, error } = await supabase
+    const { data: subsRaw, error } = await supabase
       .from('push_subscriptions')
       .select('*')
       .eq(`prefs->>${notif.tipo}`, 'true')
 
     if (error) throw error
-    if (!subs || subs.length === 0) return new Response('Sin suscriptores para este tipo', { status: 200 })
+
+    let subs = subsRaw || []
+    if (TIPOS_SOLO_ADMIN.has(notif.tipo) && subs.length > 0) {
+      const { data: admins } = await supabase.from('whitelist').select('email').eq('rol', 'admin')
+      const emailsAdmin = new Set((admins || []).map((a: any) => (a.email || '').toLowerCase()))
+      subs = subs.filter((s: any) => emailsAdmin.has((s.operador_email || '').toLowerCase()))
+    }
+
+    if (subs.length === 0) return new Response('Sin suscriptores para este tipo', { status: 200 })
 
     const payloadStr = JSON.stringify({ title: notif.titulo, body: notif.cuerpo, url: notif.url })
 

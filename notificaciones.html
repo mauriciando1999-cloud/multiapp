@@ -92,7 +92,7 @@
                 <span class="switch"><input type="checkbox" id="pref-vehiculo" onchange="guardarPrefs()"><span class="switch-track"></span></span>
             </label>
 
-            <label class="flex items-center justify-between gap-4 cursor-pointer">
+            <label id="label-curriculum" class="flex items-center justify-between gap-4 cursor-pointer hidden">
                 <div class="flex items-center gap-3">
                     <div class="neu-inset w-10 h-10 flex items-center justify-center text-[#FF8801] text-sm flex-shrink-0"><i class="fa-solid fa-file-lines"></i></div>
                     <div>
@@ -114,6 +114,17 @@
                 <span class="switch"><input type="checkbox" id="pref-consignacion" onchange="guardarPrefs()"><span class="switch-track"></span></span>
             </label>
 
+            <label id="label-venta" class="flex items-center justify-between gap-4 cursor-pointer hidden">
+                <div class="flex items-center gap-3">
+                    <div class="neu-inset w-10 h-10 flex items-center justify-center text-[#FF8801] text-sm flex-shrink-0"><i class="fa-solid fa-sack-dollar"></i></div>
+                    <div>
+                        <p class="text-xs font-black uppercase">Ventas Cerradas</p>
+                        <p class="text-[9px] text-muted font-bold uppercase">Cuando se registra un cierre</p>
+                    </div>
+                </div>
+                <span class="switch"><input type="checkbox" id="pref-venta" onchange="guardarPrefs()"><span class="switch-track"></span></span>
+            </label>
+
             <p id="msg-prefs" class="text-[10px] font-bold uppercase text-green-600 h-4"></p>
         </div>
 
@@ -127,7 +138,15 @@
     <script>
         const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
         const uEmail = localStorage.getItem('operador_email');
+        const uRol = localStorage.getItem('operador_rol');
         if (!uEmail) { window.location.href = 'index.html'; }
+
+        // Por ahora los curriculums de Talento IA y las ventas cerradas
+        // los gestiona solo el admin; a los gerentes ni se les muestra el switch.
+        if (uRol === 'admin') {
+            document.getElementById('label-curriculum').classList.remove('hidden');
+            document.getElementById('label-venta').classList.remove('hidden');
+        }
 
         let suscripcionActual = null;
 
@@ -167,11 +186,14 @@
                 .eq('endpoint', suscripcionActual.endpoint)
                 .maybeSingle();
 
-            const prefs = data?.prefs || { lead: true, vehiculo: true, curriculum: true, consignacion: true };
+            const prefs = data?.prefs || { lead: true, vehiculo: true, curriculum: uRol === 'admin', consignacion: true, venta: uRol === 'admin' };
             document.getElementById('pref-lead').checked = prefs.lead !== false;
             document.getElementById('pref-vehiculo').checked = prefs.vehiculo !== false;
-            document.getElementById('pref-curriculum').checked = prefs.curriculum !== false;
             document.getElementById('pref-consignacion').checked = prefs.consignacion !== false;
+            // Curriculum y venta son admin-only: a un gerente nunca se le
+            // marcan como activos, ni siquiera si el switch quedara visible.
+            document.getElementById('pref-curriculum').checked = uRol === 'admin' && prefs.curriculum !== false;
+            document.getElementById('pref-venta').checked = uRol === 'admin' && prefs.venta !== false;
         }
 
         async function activarNotificaciones() {
@@ -219,8 +241,11 @@
             const prefs = {
                 lead: document.getElementById('pref-lead').checked,
                 vehiculo: document.getElementById('pref-vehiculo').checked,
-                curriculum: document.getElementById('pref-curriculum').checked,
-                consignacion: document.getElementById('pref-consignacion').checked
+                consignacion: document.getElementById('pref-consignacion').checked,
+                // Admin-only por ahora: nunca se guardan en true para otros roles,
+                // sin importar el estado del switch oculto en el DOM.
+                curriculum: uRol === 'admin' && document.getElementById('pref-curriculum').checked,
+                venta: uRol === 'admin' && document.getElementById('pref-venta').checked
             };
 
             const { error } = await _supabase

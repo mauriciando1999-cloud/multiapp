@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Notificaciones | Multiamerica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --neu-bg: #e7e8ee;
+            --neu-text: #35354a;
+            --neu-text-muted: #8890a3;
+            --neu-light: #ffffff;
+            --neu-dark: #c3c5d1;
+            --neu-accent: linear-gradient(135deg, #ff9d3d, #ff8801);
+        }
+        body { background-color: var(--neu-bg); color: var(--neu-text); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .font-title { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; letter-spacing: -0.04em; }
+        .text-muted { color: var(--neu-text-muted); }
+        .neu-card { background: var(--neu-bg); border-radius: 24px; box-shadow: 8px 8px 16px var(--neu-dark), -8px -8px 16px var(--neu-light); }
+        .neu-card-sm { background: var(--neu-bg); border-radius: 16px; box-shadow: 6px 6px 12px var(--neu-dark), -6px -6px 12px var(--neu-light); transition: all .2s; }
+        .neu-inset { background: var(--neu-bg); border-radius: 16px; box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); }
+        .neu-pressable:active { box-shadow: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light); transform: scale(0.98); }
+        .neu-accent { background: var(--neu-accent); box-shadow: 6px 6px 14px rgba(200,110,10,0.28), -4px -4px 10px rgba(255,255,255,0.7); color: #fff; }
+
+        .switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch-track { position: absolute; inset: 0; background: var(--neu-dark); border-radius: 999px; transition: .3s; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2); }
+        .switch-track::before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .switch input:checked + .switch-track { background: var(--neu-accent); }
+        .switch input:checked + .switch-track::before { transform: translateX(20px); }
+        .switch input:disabled + .switch-track { opacity: 0.5; }
+    </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF8801">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Central">
+</head>
+<body class="min-h-screen pb-12">
+
+    <main class="max-w-2xl mx-auto p-4 md:p-8">
+        <header class="mb-8 sm:mb-10 pt-2">
+            <a href="dashboard.html" class="inline-flex items-center gap-2 text-muted hover:text-orange-600 font-black uppercase text-[10px] tracking-widest mb-2 transition-colors">
+                ← Volver a Central
+            </a>
+            <h1 class="text-4xl sm:text-6xl font-title uppercase leading-[0.85] tracking-tight text-[#FF8801]">NOTIFICACIONES.</h1>
+            <p class="text-xs text-muted font-bold uppercase tracking-widest mt-2">Avisos en tiempo real en este dispositivo</p>
+        </header>
+
+        <div id="bloque-activar" class="neu-card p-6 sm:p-8 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="neu-card-sm w-12 h-12 flex items-center justify-center text-[#FF8801] text-lg flex-shrink-0">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div>
+                    <p id="estado-titulo" class="font-black uppercase text-sm">Notificaciones Desactivadas</p>
+                    <p id="estado-detalle" class="text-[10px] text-muted font-bold uppercase mt-1">Activa para no perderte nada en este teléfono</p>
+                </div>
+            </div>
+            <button id="btn-activar" onclick="activarNotificaciones()" class="neu-accent neu-pressable px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest w-full sm:w-auto">
+                Activar
+            </button>
+        </div>
+
+        <div id="bloque-prefs" class="neu-card p-6 sm:p-8 space-y-5 hidden">
+            <h2 class="text-xs font-black uppercase text-muted tracking-widest mb-2">¿Qué querés que te avise?</h2>
+
+            <label class="flex items-center justify-between gap-4 cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <div class="neu-inset w-10 h-10 flex items-center justify-center text-[#FF8801] text-sm flex-shrink-0"><i class="fa-solid fa-headset"></i></div>
+                    <div>
+                        <p class="text-xs font-black uppercase">Nuevos Leads</p>
+                        <p class="text-[9px] text-muted font-bold uppercase">Consultas y citas del showroom</p>
+                    </div>
+                </div>
+                <span class="switch"><input type="checkbox" id="pref-lead" onchange="guardarPrefs()"><span class="switch-track"></span></span>
+            </label>
+
+            <label class="flex items-center justify-between gap-4 cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <div class="neu-inset w-10 h-10 flex items-center justify-center text-[#FF8801] text-sm flex-shrink-0"><i class="fa-solid fa-warehouse"></i></div>
+                    <div>
+                        <p class="text-xs font-black uppercase">Vehículos Agregados</p>
+                        <p class="text-[9px] text-muted font-bold uppercase">Cuando se registra una unidad nueva</p>
+                    </div>
+                </div>
+                <span class="switch"><input type="checkbox" id="pref-vehiculo" onchange="guardarPrefs()"><span class="switch-track"></span></span>
+            </label>
+
+            <label class="flex items-center justify-between gap-4 cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <div class="neu-inset w-10 h-10 flex items-center justify-center text-[#FF8801] text-sm flex-shrink-0"><i class="fa-solid fa-file-lines"></i></div>
+                    <div>
+                        <p class="text-xs font-black uppercase">Nuevos Currículums</p>
+                        <p class="text-[9px] text-muted font-bold uppercase">Postulaciones de Talento IA</p>
+                    </div>
+                </div>
+                <span class="switch"><input type="checkbox" id="pref-curriculum" onchange="guardarPrefs()"><span class="switch-track"></span></span>
+            </label>
+
+            <label class="flex items-center justify-between gap-4 cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <div class="neu-inset w-10 h-10 flex items-center justify-center text-[#FF8801] text-sm flex-shrink-0"><i class="fa-solid fa-car-side"></i></div>
+                    <div>
+                        <p class="text-xs font-black uppercase">Solicitudes de Consignación</p>
+                        <p class="text-[9px] text-muted font-bold uppercase">Cuando alguien quiere consignar su auto</p>
+                    </div>
+                </div>
+                <span class="switch"><input type="checkbox" id="pref-consignacion" onchange="guardarPrefs()"><span class="switch-track"></span></span>
+            </label>
+
+            <p id="msg-prefs" class="text-[10px] font-bold uppercase text-green-600 h-4"></p>
+        </div>
+
+        <button id="btn-desactivar" onclick="desactivarNotificaciones()" class="hidden neu-card-sm neu-pressable w-full mt-6 py-3 text-[10px] font-black uppercase tracking-widest text-red-500">
+            Desactivar en este dispositivo
+        </button>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        const uEmail = localStorage.getItem('operador_email');
+        if (!uEmail) { window.location.href = 'index.html'; }
+
+        let suscripcionActual = null;
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = atob(base64);
+            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+        }
+
+        async function init() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                document.getElementById('estado-detalle').innerText = 'Este navegador no soporta notificaciones push.';
+                document.getElementById('btn-activar').disabled = true;
+                document.getElementById('btn-activar').classList.add('opacity-40');
+                return;
+            }
+
+            const reg = await navigator.serviceWorker.ready;
+            suscripcionActual = await reg.pushManager.getSubscription();
+
+            if (suscripcionActual && Notification.permission === 'granted') {
+                await mostrarActivo();
+            }
+        }
+
+        async function mostrarActivo() {
+            document.getElementById('estado-titulo').innerText = 'Notificaciones Activas';
+            document.getElementById('estado-detalle').innerText = 'Recibirás avisos en este dispositivo';
+            document.getElementById('btn-activar').classList.add('hidden');
+            document.getElementById('bloque-prefs').classList.remove('hidden');
+            document.getElementById('btn-desactivar').classList.remove('hidden');
+
+            const { data } = await _supabase
+                .from('push_subscriptions')
+                .select('prefs')
+                .eq('endpoint', suscripcionActual.endpoint)
+                .maybeSingle();
+
+            const prefs = data?.prefs || { lead: true, vehiculo: true, curriculum: true, consignacion: true };
+            document.getElementById('pref-lead').checked = prefs.lead !== false;
+            document.getElementById('pref-vehiculo').checked = prefs.vehiculo !== false;
+            document.getElementById('pref-curriculum').checked = prefs.curriculum !== false;
+            document.getElementById('pref-consignacion').checked = prefs.consignacion !== false;
+        }
+
+        async function activarNotificaciones() {
+            const btn = document.getElementById('btn-activar');
+            btn.disabled = true;
+            btn.innerText = 'Activando...';
+
+            try {
+                const permiso = await Notification.requestPermission();
+                if (permiso !== 'granted') {
+                    document.getElementById('estado-detalle').innerText = 'Permiso denegado. Activalo desde los ajustes del navegador.';
+                    btn.disabled = false;
+                    btn.innerText = 'Activar';
+                    return;
+                }
+
+                const reg = await navigator.serviceWorker.ready;
+                suscripcionActual = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(CONFIG.VAPID_PUBLIC_KEY)
+                });
+
+                const subJson = suscripcionActual.toJSON();
+                const { error } = await _supabase.from('push_subscriptions').upsert({
+                    operador_email: uEmail,
+                    endpoint: subJson.endpoint,
+                    p256dh: subJson.keys.p256dh,
+                    auth: subJson.keys.auth,
+                    user_agent: navigator.userAgent
+                }, { onConflict: 'endpoint' });
+
+                if (error) throw error;
+
+                await mostrarActivo();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('estado-detalle').innerText = 'Error al activar: ' + e.message;
+                btn.disabled = false;
+                btn.innerText = 'Activar';
+            }
+        }
+
+        async function guardarPrefs() {
+            if (!suscripcionActual) return;
+            const prefs = {
+                lead: document.getElementById('pref-lead').checked,
+                vehiculo: document.getElementById('pref-vehiculo').checked,
+                curriculum: document.getElementById('pref-curriculum').checked,
+                consignacion: document.getElementById('pref-consignacion').checked
+            };
+
+            const { error } = await _supabase
+                .from('push_subscriptions')
+                .update({ prefs })
+                .eq('endpoint', suscripcionActual.endpoint);
+
+            const msg = document.getElementById('msg-prefs');
+            msg.innerText = error ? 'Error al guardar' : 'Guardado ✓';
+            msg.className = `text-[10px] font-bold uppercase h-4 ${error ? 'text-red-500' : 'text-green-600'}`;
+            setTimeout(() => msg.innerText = '', 2000);
+        }
+
+        async function desactivarNotificaciones() {
+            if (!suscripcionActual) return;
+            try {
+                await _supabase.from('push_subscriptions').delete().eq('endpoint', suscripcionActual.endpoint);
+                await suscripcionActual.unsubscribe();
+            } catch (e) { console.error(e); }
+            suscripcionActual = null;
+            window.location.reload();
+        }
+
+        init();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.error));
+        }
+    </script>
+</body>
+</html>

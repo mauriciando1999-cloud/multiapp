@@ -85,11 +85,16 @@
                 </div>
                 <h1 id="titulo-central" class="text-4xl sm:text-6xl md:text-8xl font-title uppercase leading-[0.85] tracking-tight">CENTRAL.</h1>
             </div>
-            <div class="neu-card-sm flex items-center gap-3 p-2.5 pr-4 sm:pr-5 w-fit">
-                <div class="w-9 h-9 sm:w-10 sm:h-10 neu-accent rounded-full flex items-center justify-center font-title italic text-lg flex-shrink-0" id="user-initial">?</div>
-                <div class="text-left min-w-0">
-                    <p id="user-email" class="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-tight truncate max-w-[140px] sm:max-w-none">---</p>
-                    <button onclick="logout()" class="text-[9px] font-black text-red-500 uppercase hover:text-[#FF8801] transition-colors">Cerrar Sesión</button>
+            <div class="flex items-center gap-3">
+                <a href="notificaciones.html" class="neu-card-sm neu-pressable w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center text-muted flex-shrink-0" title="Notificaciones">
+                    <i class="fa-solid fa-bell"></i>
+                </a>
+                <div class="neu-card-sm flex items-center gap-3 p-2.5 pr-4 sm:pr-5 w-fit">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 neu-accent rounded-full flex items-center justify-center font-title italic text-lg flex-shrink-0" id="user-initial">?</div>
+                    <div class="text-left min-w-0">
+                        <p id="user-email" class="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-tight truncate max-w-[140px] sm:max-w-none">---</p>
+                        <button onclick="logout()" class="text-[9px] font-black text-red-500 uppercase hover:text-[#FF8801] transition-colors">Cerrar Sesión</button>
+                    </div>
                 </div>
             </div>
         </header>

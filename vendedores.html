@@ -141,9 +141,15 @@
 
         function actualizarKPIs() {
             document.getElementById('kpi-asesores').innerText = todosLosVendedores.length;
-            const gerenciasUnicas = new Set(todosLosVendedores.map(v => v.gerente_id).filter(id => id));
-            const tieneDirectos = todosLosVendedores.some(v => !v.gerente_id);
-            document.getElementById('kpi-equipos').innerText = gerenciasUnicas.size + (tieneDirectos ? 1 : 0);
+
+            if (userRol === 'admin') {
+                const gerenciasUnicas = new Set(todosLosVendedores.map(v => v.gerente_id).filter(id => id));
+                const tieneDirectos = todosLosVendedores.some(v => !v.gerente_id);
+                document.getElementById('kpi-equipos').innerText = gerenciasUnicas.size + (tieneDirectos ? 1 : 0);
+            } else {
+                // Un gerente solo administra su propio equipo.
+                document.getElementById('kpi-equipos').innerText = 1;
+            }
         }
 
         function renderizarEquipos(listaFiltrada) {
@@ -155,21 +161,32 @@
                 return;
             }
 
-            // Agrupación por Gerente (usando su slug como llave)
-            const equipos = { 'directos': { nombreGerente: 'VENDEDORES DIRECTOS / GERENCIA GENERAL', miembros: [] } };
+            let equipos;
 
-            listaFiltrada.forEach(v => {
-                if (!v.gerente_id) {
-                    equipos['directos'].miembros.push(v);
-                } else {
-                    if (!equipos[v.gerente_id]) {
-                        const gerenteObj = todosLosVendedores.find(g => g.slug === v.gerente_id);
-                        const nombreG = gerenteObj ? `${gerenteObj.nombre} ${gerenteObj.apellido || ''}` : 'Gerencia Externa';
-                        equipos[v.gerente_id] = { nombreGerente: `EQUIPO: ${nombreG.toUpperCase()}`, miembros: [] };
+            if (userRol === 'admin') {
+                // Vista de admin: agrupa por gerente (usando su slug como
+                // llave). "directos" son quienes no reportan a nadie.
+                equipos = { 'directos': { nombreGerente: 'VENDEDORES DIRECTOS / GERENCIA GENERAL', miembros: [] } };
+
+                listaFiltrada.forEach(v => {
+                    if (!v.gerente_id) {
+                        equipos['directos'].miembros.push(v);
+                    } else {
+                        if (!equipos[v.gerente_id]) {
+                            const gerenteObj = todosLosVendedores.find(g => g.slug === v.gerente_id);
+                            const nombreG = gerenteObj ? `${gerenteObj.nombre} ${gerenteObj.apellido || ''}` : 'Gerencia Externa';
+                            equipos[v.gerente_id] = { nombreGerente: `EQUIPO: ${nombreG.toUpperCase()}`, miembros: [] };
+                        }
+                        equipos[v.gerente_id].miembros.push(v);
                     }
-                    equipos[v.gerente_id].miembros.push(v);
-                }
-            });
+                });
+            } else {
+                // Vista de gerente: RLS ya le muestra solo su propia fila +
+                // sus subordinados. Es un solo equipo, no tiene sentido
+                // partirlo entre "directos" y "su equipo" como en la vista
+                // de admin (eso separaba al gerente de su propio equipo).
+                equipos = { 'mi-equipo': { nombreGerente: 'MI EQUIPO', miembros: listaFiltrada } };
+            }
 
             for (const [idEquipo, equipo] of Object.entries(equipos)) {
                 if (equipo.miembros.length === 0) continue;

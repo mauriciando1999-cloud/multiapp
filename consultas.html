@@ -42,12 +42,12 @@
                     ← Volver a Central
                 </a>
                 <h1 class="text-4xl sm:text-6xl md:text-8xl font-title uppercase leading-[0.85] tracking-tight text-[#FF8801]">LEADS.</h1>
-                <p class="text-xs text-muted font-bold uppercase tracking-widest mt-2">Consultas y citas del Showroom</p>
+                <p class="text-xs text-muted font-bold uppercase tracking-widest mt-2">Compradores y consignaciones, todo en un lugar</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="filtrarPor('todos')" class="filtro-btn neu-pressable activo px-3 sm:px-4 py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest" data-filtro="todos">Todos</button>
-                <button onclick="filtrarPor('Pendiente')" class="filtro-btn neu-pressable px-3 sm:px-4 py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest" data-filtro="Pendiente">Pendientes</button>
-                <button onclick="filtrarPor('Contactado')" class="filtro-btn neu-pressable px-3 sm:px-4 py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest" data-filtro="Contactado">Contactados</button>
+                <button onclick="filtrarPor('pendientes')" class="filtro-btn neu-pressable px-3 sm:px-4 py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest" data-filtro="pendientes">Pendientes</button>
+                <button onclick="filtrarPor('gestionados')" class="filtro-btn neu-pressable px-3 sm:px-4 py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest" data-filtro="gestionados">Gestionados</button>
             </div>
         </header>
 
@@ -72,6 +72,7 @@
         }
 
         let todosLosLeads = [];
+        let todasLasConsignaciones = [];
         let filtroActual = 'todos';
         let vehiculosPorId = {};
         let leadsConVenta = new Set();
@@ -79,6 +80,8 @@
         // lead se le asigno al azar en la web publica: el mensaje debe
         // presentarse con el nombre de quien realmente escribe.
         let miNombre = null;
+
+        const PENDIENTES_CONSIGNACION = ['Pendiente de Revisión', 'Agendado'];
 
         async function cargarMiNombre() {
             const cacheado = localStorage.getItem('operador_nombre');
@@ -88,16 +91,17 @@
         }
 
         async function cargarLeads() {
-            const { data, error } = await _supabase
-                .from('consultas_showroom')
-                .select('*')
-                .order('creado_el', { ascending: false });
+            const [{ data: leads, error: errLeads }, { data: consig, error: errConsig }] = await Promise.all([
+                _supabase.from('consultas_showroom').select('*').order('creado_el', { ascending: false }),
+                _supabase.from('consignaciones').select('*').order('created_at', { ascending: false })
+            ]);
 
-            if (error) {
-                document.getElementById('lista-leads').innerHTML = `<p class="text-xs text-red-500 font-bold text-center py-10">Error: ${error.message}</p>`;
+            if (errLeads) {
+                document.getElementById('lista-leads').innerHTML = `<p class="text-xs text-red-500 font-bold text-center py-10">Error: ${errLeads.message}</p>`;
                 return;
             }
-            todosLosLeads = data || [];
+            todosLosLeads = leads || [];
+            todasLasConsignaciones = errConsig ? [] : (consig || []);
 
             const idsUnicos = [...new Set(todosLosLeads.flatMap(l => l.vehiculo_ids || []))];
             if (idsUnicos.length > 0) {
@@ -130,48 +134,86 @@
 
         function renderLeads() {
             const cont = document.getElementById('lista-leads');
-            const datos = filtroActual === 'todos' ? todosLosLeads : todosLosLeads.filter(l => l.estatus === filtroActual);
 
-            if (datos.length === 0) {
+            const leadsConTipo = todosLosLeads.map(l => ({ _tipo: 'lead', _fecha: l.creado_el, _pendiente: l.estatus !== 'Contactado', data: l }));
+            const consigConTipo = todasLasConsignaciones.map(c => ({ _tipo: 'consignacion', _fecha: c.created_at, _pendiente: PENDIENTES_CONSIGNACION.includes(c.estatus), data: c }));
+
+            let items = [...leadsConTipo, ...consigConTipo];
+            if (filtroActual === 'pendientes') items = items.filter(i => i._pendiente);
+            if (filtroActual === 'gestionados') items = items.filter(i => !i._pendiente);
+            items.sort((a, b) => new Date(b._fecha) - new Date(a._fecha));
+
+            if (items.length === 0) {
                 cont.innerHTML = `<p class="text-xs text-muted font-bold uppercase text-center py-10 italic">Sin registros</p>`;
                 return;
             }
 
-            cont.innerHTML = datos.map(l => {
-                const esCita = l.tipo === 'Cita';
-                const badgeColor = l.estatus === 'Contactado' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
-                const tieneWa = !!l.cliente_telefono;
+            cont.innerHTML = items.map(item => item._tipo === 'lead' ? renderCardLead(item.data) : renderCardConsignacion(item.data)).join('');
+        }
 
-                const chipsAutos = (l.vehiculo_ids && l.vehiculo_ids.length > 0)
-                    ? l.vehiculo_ids.map((vid, i) => {
-                        const auto = vehiculosPorId[vid];
-                        const etiqueta = auto ? `${auto.marca} ${auto.modelo}` : (l.vehiculos || [])[i] || 'Vehículo';
-                        return auto
-                            ? `<a href="detalle.html?id=${vid}" target="_blank" class="inline-block bg-white/60 hover:bg-white text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border border-black/5 mr-1 mt-1 transition-colors">${escapeHtml(etiqueta)} <i class="fa-solid fa-arrow-up-right-from-square text-[8px] ml-0.5 text-muted"></i></a>`
-                            : `<span class="inline-block text-[10px] font-bold uppercase px-2.5 py-1 mr-1 mt-1 text-muted">${escapeHtml(etiqueta)}</span>`;
-                    }).join('')
-                    : `<p class="text-xs text-muted font-bold mt-1">${escapeHtml((l.vehiculos || []).join(', ')) || 'Sin vehículos'}</p>`;
+        function renderCardLead(l) {
+            const esCita = l.tipo === 'Cita';
+            const badgeColor = l.estatus === 'Contactado' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+            const tieneWa = !!l.cliente_telefono;
 
-                return `
-                <div class="neu-card p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-2 flex-wrap">
-                            <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg ${esCita ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}">${escapeHtml(l.tipo)}</span>
-                            <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg ${badgeColor}">${escapeHtml(l.estatus)}</span>
-                            ${leadsConVenta.has(l.id) ? `<span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-green-600 text-white"><i class="fa-solid fa-circle-check mr-1"></i>Convertido en Venta</span>` : ''}
-                            <span class="text-[9px] text-muted font-bold">${escapeHtml(new Date(l.creado_el).toLocaleString('es-VE'))}</span>
-                        </div>
-                        <h3 class="font-black text-base sm:text-lg uppercase italic truncate">${escapeHtml(l.cliente_nombre) || 'Sin nombre (vía Agendar)'} ${l.cliente_telefono ? `· ${escapeHtml(l.cliente_telefono)}` : ''}</h3>
-                        <div class="mt-1">${chipsAutos}</div>
-                        ${l.fecha_hora ? `<p class="text-xs text-muted font-bold mt-1"><i class="fa-regular fa-calendar mr-1"></i> ${escapeHtml(l.fecha_hora)} ${l.ubicacion ? '· ' + escapeHtml(l.ubicacion) : ''}</p>` : ''}
-                        <p class="text-[10px] text-muted font-bold uppercase mt-2">Asignado a: <span class="text-black">${escapeHtml(l.gerente_nombre) || 'Sin asignar'}</span></p>
+            const chipsAutos = (l.vehiculo_ids && l.vehiculo_ids.length > 0)
+                ? l.vehiculo_ids.map((vid, i) => {
+                    const auto = vehiculosPorId[vid];
+                    const etiqueta = auto ? `${auto.marca} ${auto.modelo}` : (l.vehiculos || [])[i] || 'Vehículo';
+                    return auto
+                        ? `<a href="detalle.html?id=${vid}" target="_blank" class="inline-block bg-white/60 hover:bg-white text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border border-black/5 mr-1 mt-1 transition-colors">${escapeHtml(etiqueta)} <i class="fa-solid fa-arrow-up-right-from-square text-[8px] ml-0.5 text-muted"></i></a>`
+                        : `<span class="inline-block text-[10px] font-bold uppercase px-2.5 py-1 mr-1 mt-1 text-muted">${escapeHtml(etiqueta)}</span>`;
+                }).join('')
+                : `<p class="text-xs text-muted font-bold mt-1">${escapeHtml((l.vehiculos || []).join(', ')) || 'Sin vehículos'}</p>`;
+
+            return `
+            <div class="neu-card p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-purple-400">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700"><i class="fa-solid fa-headset mr-1"></i>${escapeHtml(l.tipo)}</span>
+                        <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg ${badgeColor}">${escapeHtml(l.estatus)}</span>
+                        ${leadsConVenta.has(l.id) ? `<span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-green-600 text-white"><i class="fa-solid fa-circle-check mr-1"></i>Convertido en Venta</span>` : ''}
+                        <span class="text-[9px] text-muted font-bold">${escapeHtml(new Date(l.creado_el).toLocaleString('es-VE'))}</span>
                     </div>
-                    <div class="flex gap-2 flex-shrink-0">
-                        ${tieneWa ? `<button onclick="contactarLead('${l.id}')" class="neu-card-sm neu-pressable bg-[#25D366] text-white px-4 py-3 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><i class="fa-brands fa-whatsapp"></i> Contactar</button>` : ''}
-                        ${l.estatus !== 'Contactado' ? `<button onclick="marcarContactado('${l.id}')" class="neu-card-sm neu-pressable text-black px-4 py-3 text-[10px] font-black uppercase tracking-widest">Marcar Contactado</button>` : ''}
+                    <h3 class="font-black text-base sm:text-lg uppercase italic truncate">${escapeHtml(l.cliente_nombre) || 'Sin nombre (vía Agendar)'} ${l.cliente_telefono ? `· ${escapeHtml(l.cliente_telefono)}` : ''}</h3>
+                    <div class="mt-1">${chipsAutos}</div>
+                    ${l.fecha_hora ? `<p class="text-xs text-muted font-bold mt-1"><i class="fa-regular fa-calendar mr-1"></i> ${escapeHtml(l.fecha_hora)} ${l.ubicacion ? '· ' + escapeHtml(l.ubicacion) : ''}</p>` : ''}
+                    <p class="text-[10px] text-muted font-bold uppercase mt-2">Asignado a: <span class="text-black">${escapeHtml(l.gerente_nombre) || 'Sin asignar'}</span></p>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    ${tieneWa ? `<button onclick="contactarLead('${l.id}')" class="neu-card-sm neu-pressable bg-[#25D366] text-white px-4 py-3 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><i class="fa-brands fa-whatsapp"></i> Contactar</button>` : ''}
+                    ${l.estatus !== 'Contactado' ? `<button onclick="marcarContactado('${l.id}')" class="neu-card-sm neu-pressable text-black px-4 py-3 text-[10px] font-black uppercase tracking-widest">Marcar Contactado</button>` : ''}
+                </div>
+            </div>`;
+        }
+
+        function renderCardConsignacion(c) {
+            const badgeColores = {
+                'Pendiente de Revisión': 'bg-orange-100 text-orange-700',
+                'Agendado': 'bg-blue-100 text-blue-700',
+                'Aprobado': 'bg-green-100 text-green-700',
+                'Rechazado': 'bg-red-100 text-red-700',
+                'Promovido a Inventario': 'bg-gray-800 text-white',
+            };
+            const badgeColor = badgeColores[c.estatus] || 'bg-gray-100 text-gray-700';
+
+            return `
+            <a href="revision_detalle.html?id=${c.id}" class="neu-card p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-emerald-400">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700"><i class="fa-solid fa-car-side mr-1"></i>Consignación</span>
+                        <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg ${badgeColor}">${escapeHtml(c.estatus)}</span>
+                        <span class="text-[9px] text-muted font-bold">${escapeHtml(new Date(c.created_at).toLocaleString('es-VE'))}</span>
                     </div>
-                </div>`;
-            }).join('');
+                    <h3 class="font-black text-base sm:text-lg uppercase italic truncate">${escapeHtml(c.nombre) || 'Sin nombre'} ${c.telefono ? `· ${escapeHtml(c.telefono)}` : ''}</h3>
+                    <p class="text-xs text-muted font-bold mt-1">${escapeHtml(c.vehiculo) || 'Sin vehículo'} ${c.anio ? `· ${c.anio}` : ''} ${c.kilometraje ? `· ${Number(c.kilometraje).toLocaleString()} km` : ''}</p>
+                    <p class="text-[10px] text-muted font-bold uppercase mt-2">Asignado a: <span class="text-black">${escapeHtml(c.gerente_nombre) || 'Sin asignar'}</span></p>
+                </div>
+                <div class="text-right flex-shrink-0 flex md:flex-col items-center md:items-end justify-between md:justify-center gap-2">
+                    ${c.precio ? `<p class="text-lg font-title italic font-black text-[#FF8801]">$${Number(c.precio).toLocaleString()}</p>` : ''}
+                    <span class="neu-card-sm neu-pressable px-4 py-3 text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-2">Revisar <i class="fa-solid fa-arrow-right"></i></span>
+                </div>
+            </a>`;
         }
 
         async function marcarContactado(id) {

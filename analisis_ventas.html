@@ -67,37 +67,47 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 sm:mb-12">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 sm:mb-12">
             <div class="neu-card stat-card p-4 sm:p-6">
-                <p class="text-[8px] font-black uppercase text-muted tracking-widest mb-2">Comisión Total Gerentes</p>
-                <p class="text-xl sm:text-2xl font-title italic text-black" id="total-comision-gerente">$0</p>
+                <p class="text-[8px] font-black uppercase text-muted tracking-widest mb-2">Comisión Total · Venta</p>
+                <p class="text-xl sm:text-2xl font-title italic text-black" id="total-comision-venta">$0</p>
+            </div>
+            <div class="neu-card stat-card p-4 sm:p-6" style="border-left-color:#0ea5e9;">
+                <p class="text-[8px] font-black uppercase text-muted tracking-widest mb-2">Comisión Total · Ingreso de Vehículo</p>
+                <p class="text-xl sm:text-2xl font-title italic text-[#0ea5e9]" id="total-comision-ingreso">$0</p>
             </div>
             <div class="neu-card stat-card p-4 sm:p-6" style="border-left-color:#25D366;">
-                <p class="text-[8px] font-black uppercase text-muted tracking-widest mb-2">Comisión por Adquisición de Cliente (Web)</p>
+                <p class="text-[8px] font-black uppercase text-muted tracking-widest mb-2">Comisión Total · Web (ambos lados)</p>
                 <p class="text-xl sm:text-2xl font-title italic text-[#1ea952]" id="total-comision-web">$0</p>
             </div>
         </div>
 
-        <div id="panel-comisiones" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12 no-print hidden">
+        <div id="panel-comisiones" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12 no-print hidden">
             <div class="neu-card p-5 sm:p-8">
-                <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Comisión de Gerentes</h3>
-                <p class="text-[10px] text-muted mb-4">Porcentaje del precio de venta que cobra el gerente por cerrar la operación.</p>
-                <label class="text-[9px] font-bold text-muted uppercase block mb-1">Comisión Gerente (%)</label>
-                <input type="number" id="cfg-gerente-pct" min="0" max="100" step="0.1" class="neu-inset w-full py-3 px-4 text-sm font-bold outline-none">
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Comisión por Venta</h3>
+                <p class="text-[10px] text-muted mb-4">Para quien cierra la operación (registra la venta). Independiente de quien haya ingresado el vehículo.</p>
+                <label class="text-[9px] font-bold text-muted uppercase block mb-1">% del precio de venta</label>
+                <input type="number" id="cfg-venta-pct" min="0" max="100" step="0.1" class="neu-inset w-full py-3 px-4 text-sm font-bold outline-none">
             </div>
             <div class="neu-card p-5 sm:p-8" style="border-left: 4px solid #25D366;">
                 <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Adquisición · Leads del Showroom</h3>
-                <p class="text-[10px] text-muted mb-4">Cuando la venta viene de una consulta/cita del showroom hecha por la web, este % de la comisión del gerente se separa aparte.</p>
-                <label class="text-[9px] font-bold text-muted uppercase block mb-1">% de la comisión del gerente</label>
+                <p class="text-[10px] text-muted mb-4">Cuando el comprador vino de una consulta/cita del showroom hecha por la web, este % de la comisión de venta se separa aparte.</p>
+                <label class="text-[9px] font-bold text-muted uppercase block mb-1">% de la comisión de venta</label>
                 <input type="number" id="cfg-web-lead-pct" min="0" max="100" step="0.1" class="neu-inset w-full py-3 px-4 text-sm font-bold outline-none">
+            </div>
+            <div class="neu-card p-5 sm:p-8">
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Comisión por Ingreso de Vehículo</h3>
+                <p class="text-[10px] text-muted mb-4">Para quien registra/ingresa el vehículo al concesionario. Si es la misma persona que vende, cobra ambas comisiones.</p>
+                <label class="text-[9px] font-bold text-muted uppercase block mb-1">% del precio de venta</label>
+                <input type="number" id="cfg-ingreso-pct" min="0" max="100" step="0.1" class="neu-inset w-full py-3 px-4 text-sm font-bold outline-none">
             </div>
             <div class="neu-card p-5 sm:p-8" style="border-left: 4px solid #0ea5e9;">
                 <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-1 italic">Adquisición · Consignaciones Web</h3>
-                <p class="text-[10px] text-muted mb-4">Cuando el auto vendido ingresó por una consignación hecha por la web, este % (puede ser distinto al de leads) se separa aparte.</p>
-                <label class="text-[9px] font-bold text-muted uppercase block mb-1">% de la comisión del gerente</label>
+                <p class="text-[10px] text-muted mb-4">Cuando el auto vendido ingresó por una consignación hecha por la web, este % (puede ser distinto al de leads) se separa de la comisión de ingreso.</p>
+                <label class="text-[9px] font-bold text-muted uppercase block mb-1">% de la comisión de ingreso</label>
                 <input type="number" id="cfg-web-consig-pct" min="0" max="100" step="0.1" class="neu-inset w-full py-3 px-4 text-sm font-bold outline-none">
             </div>
-            <div class="md:col-span-3 flex items-center justify-between gap-4">
+            <div class="md:col-span-2 flex items-center justify-between gap-4">
                 <p id="msg-comisiones" class="text-[10px] font-bold uppercase"></p>
                 <button onclick="guardarComisiones()" id="btn-guardar-comisiones" class="neu-card-sm neu-pressable bg-black text-white px-6 py-3 text-[10px] font-black uppercase tracking-widest flex-shrink-0">Guardar Cambios</button>
             </div>
@@ -105,7 +115,7 @@
 
         <div id="panel-comisiones-lectura" class="neu-card p-5 sm:p-8 mb-8 sm:mb-12 no-print hidden">
             <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-2 italic">Comisiones Vigentes</h3>
-            <p class="text-xs font-bold">Gerente: <span id="ro-gerente-pct" class="text-black">--</span>% · Leads Web: <span id="ro-web-lead-pct" class="text-black">--</span>% · Consignaciones Web: <span id="ro-web-consig-pct" class="text-black">--</span>% de esa comisión</p>
+            <p class="text-xs font-bold">Venta: <span id="ro-venta-pct" class="text-black">--</span>% · Ingreso: <span id="ro-ingreso-pct" class="text-black">--</span>% · Leads Web: <span id="ro-web-lead-pct" class="text-black">--</span>% · Consignaciones Web: <span id="ro-web-consig-pct" class="text-black">--</span>%</p>
         </div>
 
         <div class="flex flex-col md:flex-row gap-4 mb-8 sm:mb-12 no-print">
@@ -139,7 +149,8 @@
                         <tr class="border-b border-black/5">
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Fecha</th>
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Vehículo</th>
-                            <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Vendedor</th>
+                            <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Vendió</th>
+                            <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Ingresó</th>
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Origen</th>
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Monto</th>
                             <th class="p-4 sm:p-6 text-[9px] font-black uppercase tracking-widest text-muted whitespace-nowrap">Comisión</th>
@@ -170,33 +181,41 @@
             const body = document.getElementById('tabla-ventas-body');
             let total = 0;
             let ventasWeb = 0;
-            let totalComisionGerente = 0;
+            let totalComisionVenta = 0;
+            let totalComisionIngreso = 0;
             let totalComisionWeb = 0;
             document.getElementById('total-ventas').innerText = ventas.length;
 
             body.innerHTML = [...ventas].reverse().map(v => {
                 total += v.precio_venta;
-                totalComisionGerente += Number(v.comision || 0);
-                totalComisionWeb += Number(v.comision_web || 0);
+                totalComisionVenta += Number(v.comision || 0);
+                totalComisionIngreso += Number(v.comision_ingreso || 0);
+                totalComisionWeb += Number(v.comision_web || 0) + Number(v.comision_web_ingreso || 0);
                 const esWeb = (v.origen_venta || '').startsWith('Web');
+                const esWebVenta = v.origen_venta === 'Web-Lead' || v.origen_venta === 'Web-Ambos';
+                const esWebIngreso = v.origen_venta === 'Web-Consignación' || v.origen_venta === 'Web-Ambos';
                 if (esWeb) ventasWeb++;
                 const etiquetaOrigen = (v.origen_venta || 'Piso').replace('-', ' · ');
                 return `
-                    <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors venta-row" data-search="${v.vehiculo} ${v.vendedor}">
+                    <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors venta-row" data-search="${v.vehiculo} ${v.vendedor} ${v.gerente_ingreso_email || ''}">
                         <td class="p-6 text-[10px] font-mono font-bold text-gray-400">${new Date(v.created_at).toLocaleDateString()}</td>
                         <td class="p-6 text-xs font-black uppercase">${v.vehiculo}</td>
                         <td class="p-6 text-xs font-bold text-gray-500 uppercase">${v.vendedor}</td>
+                        <td class="p-6 text-xs font-bold text-gray-500 uppercase">${v.gerente_ingreso_email || '—'}</td>
                         <td class="p-6"><span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase whitespace-nowrap ${esWeb ? 'bg-green-50 text-[#1ea952]' : 'bg-gray-100 text-gray-500'}">${etiquetaOrigen}</span></td>
                         <td class="p-6 text-sm font-title italic font-black text-black">$${v.precio_venta.toLocaleString()}</td>
                         <td class="p-6">
-                            <span class="bg-orange-50 text-[#FF8801] px-3 py-1 rounded-lg text-[10px] font-black">+$${Number(v.comision || 0).toFixed(2)}</span>
-                            ${esWeb ? `<span class="bg-green-50 text-[#1ea952] px-3 py-1 rounded-lg text-[10px] font-black ml-1">Web +$${Number(v.comision_web || 0).toFixed(2)}</span>` : ''}
+                            <div class="flex flex-col gap-1">
+                                <span class="whitespace-nowrap"><span class="bg-orange-50 text-[#FF8801] px-2.5 py-1 rounded-lg text-[10px] font-black">Venta +$${Number(v.comision || 0).toFixed(2)}</span>${esWebVenta ? `<span class="bg-green-50 text-[#1ea952] px-2.5 py-1 rounded-lg text-[10px] font-black ml-1">Web +$${Number(v.comision_web || 0).toFixed(2)}</span>` : ''}</span>
+                                ${v.gerente_ingreso_email ? `<span class="whitespace-nowrap"><span class="bg-sky-50 text-[#0ea5e9] px-2.5 py-1 rounded-lg text-[10px] font-black">Ingreso +$${Number(v.comision_ingreso || 0).toFixed(2)}</span>${esWebIngreso ? `<span class="bg-green-50 text-[#1ea952] px-2.5 py-1 rounded-lg text-[10px] font-black ml-1">Web +$${Number(v.comision_web_ingreso || 0).toFixed(2)}</span>` : ''}</span>` : ''}
+                            </div>
                         </td>
                     </tr>`;
             }).join('');
             document.getElementById('total-volumen').innerText = `$${(total / 1000).toFixed(1)}k`;
             document.getElementById('pct-web').innerText = ventas.length > 0 ? `${Math.round((ventasWeb / ventas.length) * 100)}%` : '0%';
-            document.getElementById('total-comision-gerente').innerText = `$${totalComisionGerente.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+            document.getElementById('total-comision-venta').innerText = `$${totalComisionVenta.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+            document.getElementById('total-comision-ingreso').innerText = `$${totalComisionIngreso.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
             document.getElementById('total-comision-web').innerText = `$${totalComisionWeb.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
         }
 
@@ -206,12 +225,14 @@
 
             if (uRol === 'admin') {
                 document.getElementById('panel-comisiones').classList.remove('hidden');
-                document.getElementById('cfg-gerente-pct').value = data.comision_gerente_pct;
+                document.getElementById('cfg-venta-pct').value = data.comision_venta_pct;
+                document.getElementById('cfg-ingreso-pct').value = data.comision_ingreso_pct;
                 document.getElementById('cfg-web-lead-pct').value = data.comision_web_lead_pct;
                 document.getElementById('cfg-web-consig-pct').value = data.comision_web_consignacion_pct;
             } else {
                 document.getElementById('panel-comisiones-lectura').classList.remove('hidden');
-                document.getElementById('ro-gerente-pct').innerText = data.comision_gerente_pct;
+                document.getElementById('ro-venta-pct').innerText = data.comision_venta_pct;
+                document.getElementById('ro-ingreso-pct').innerText = data.comision_ingreso_pct;
                 document.getElementById('ro-web-lead-pct').innerText = data.comision_web_lead_pct;
                 document.getElementById('ro-web-consig-pct').innerText = data.comision_web_consignacion_pct;
             }
@@ -220,11 +241,12 @@
         async function guardarComisiones() {
             const btn = document.getElementById('btn-guardar-comisiones');
             const msg = document.getElementById('msg-comisiones');
-            const gerentePct = parseFloat(document.getElementById('cfg-gerente-pct').value);
+            const ventaPct = parseFloat(document.getElementById('cfg-venta-pct').value);
+            const ingresoPct = parseFloat(document.getElementById('cfg-ingreso-pct').value);
             const webLeadPct = parseFloat(document.getElementById('cfg-web-lead-pct').value);
             const webConsigPct = parseFloat(document.getElementById('cfg-web-consig-pct').value);
 
-            if ([gerentePct, webLeadPct, webConsigPct].some(v => isNaN(v) || v < 0)) {
+            if ([ventaPct, ingresoPct, webLeadPct, webConsigPct].some(v => isNaN(v) || v < 0)) {
                 msg.className = 'text-[10px] font-bold uppercase mt-3 text-red-500';
                 msg.innerText = 'Valores inválidos.';
                 return;
@@ -232,7 +254,8 @@
 
             btn.disabled = true;
             const { error } = await _db.from('configuracion_comisiones').update({
-                comision_gerente_pct: gerentePct,
+                comision_venta_pct: ventaPct,
+                comision_ingreso_pct: ingresoPct,
                 comision_web_lead_pct: webLeadPct,
                 comision_web_consignacion_pct: webConsigPct,
                 actualizado_el: new Date().toISOString(),

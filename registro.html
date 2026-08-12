@@ -134,10 +134,11 @@
     <script>
         const _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
         const urlParams = new URLSearchParams(window.location.search);
-        const editId = urlParams.get('id'); 
+        const editId = urlParams.get('id');
+        const consignacionId = urlParams.get('desde_consignacion');
         const userEmail = localStorage.getItem('operador_email');
-        
-        let listaDeFotos = []; 
+
+        let listaDeFotos = [];
         let sortable;
 
         if (!userEmail) window.location.href = 'index.html';
@@ -152,35 +153,67 @@
         });
 
         async function prepararFormulario() {
-            if (!editId) return;
-            
-            document.getElementById('page-title').innerText = "MODIFICAR.";
-            document.getElementById('submit-btn').innerText = "ACTUALIZAR CAMBIOS";
+            if (editId) {
+                document.getElementById('page-title').innerText = "MODIFICAR.";
+                document.getElementById('submit-btn').innerText = "ACTUALIZAR CAMBIOS";
 
-            const { data: u, error } = await _supabase.from('inventario').select('*').eq('id', editId).maybeSingle();
-            if (error || !u) return;
+                const { data: u, error } = await _supabase.from('inventario').select('*').eq('id', editId).maybeSingle();
+                if (error || !u) return;
 
-            document.getElementById('brand').value = u.marca || '';
-            document.getElementById('model').value = u.modelo || '';
-            document.getElementById('year').value = u.anio || '';
-            document.getElementById('price_sale').value = u.precio_venta || '';
-            document.getElementById('mileage').value = u.kilometraje || '';
-            document.getElementById('color').value = u.color || '';
-            document.getElementById('engine').value = u.motor || '';
-            document.getElementById('cost_total').value = u.costo_adquisicion || '';
-            
-            if (u.transmision) document.getElementById('transmission').value = u.transmision.toUpperCase();
-            if (u.tipo) document.getElementById('type').value = u.tipo; // Carga el tipo existente
+                document.getElementById('brand').value = u.marca || '';
+                document.getElementById('model').value = u.modelo || '';
+                document.getElementById('year').value = u.anio || '';
+                document.getElementById('price_sale').value = u.precio_venta || '';
+                document.getElementById('mileage').value = u.kilometraje || '';
+                document.getElementById('color').value = u.color || '';
+                document.getElementById('engine').value = u.motor || '';
+                document.getElementById('cost_total').value = u.costo_adquisicion || '';
 
-            if (u.fotos && u.fotos.length > 0) {
-                u.fotos.forEach(entry => {
-                    // Soporta tanto URLs completas (formato nuevo) como paths viejos (formato legacy).
-                    const publicUrl = entry.startsWith('http')
-                        ? entry
-                        : _supabase.storage.from('autos').getPublicUrl(entry).data.publicUrl;
-                    listaDeFotos.push({ file: null, url: publicUrl, isNew: false, path: publicUrl });
-                });
-                renderizarPreviews();
+                if (u.transmision) document.getElementById('transmission').value = u.transmision.toUpperCase();
+                if (u.tipo) document.getElementById('type').value = u.tipo; // Carga el tipo existente
+
+                if (u.fotos && u.fotos.length > 0) {
+                    u.fotos.forEach(entry => {
+                        // Soporta tanto URLs completas (formato nuevo) como paths viejos (formato legacy).
+                        const publicUrl = entry.startsWith('http')
+                            ? entry
+                            : _supabase.storage.from('autos').getPublicUrl(entry).data.publicUrl;
+                        listaDeFotos.push({ file: null, url: publicUrl, isNew: false, path: publicUrl });
+                    });
+                    renderizarPreviews();
+                }
+                return;
+            }
+
+            if (consignacionId) {
+                document.getElementById('page-title').innerText = "PROMOVER.";
+                document.getElementById('submit-btn').innerText = "PUBLICAR EN INVENTARIO";
+
+                const { data: c, error } = await _supabase.from('consignaciones').select('*').eq('id', consignacionId).maybeSingle();
+                if (error || !c) { alert('No se pudo cargar la consignación.'); return; }
+
+                // El cliente escribe marca+modelo en un solo campo libre;
+                // separamos como mejor esfuerzo, el gerente corrige si hace falta.
+                const partes = (c.vehiculo || '').trim().split(/\s+/);
+                document.getElementById('brand').value = (partes.shift() || '').toUpperCase();
+                document.getElementById('model').value = partes.join(' ').toUpperCase();
+                document.getElementById('year').value = c.anio || '';
+                document.getElementById('mileage').value = c.kilometraje || '';
+                if (c.precio) document.getElementById('price_sale').value = c.precio;
+                if (c.tipo) document.getElementById('type').value = c.tipo;
+
+                if (c.fotos && c.fotos.length > 0) {
+                    const avisoFotos = document.createElement('p');
+                    avisoFotos.className = 'text-[9px] font-bold uppercase text-[#FF8801] mt-2';
+                    avisoFotos.innerText = 'Fotos del cliente precargadas — reemplázalas por las nuevas que tomes en el concesionario.';
+                    document.getElementById('drop-zone').insertAdjacentElement('afterend', avisoFotos);
+
+                    c.fotos.forEach(path => {
+                        const publicUrl = _supabase.storage.from('autos').getPublicUrl(path).data.publicUrl;
+                        listaDeFotos.push({ file: null, url: publicUrl, isNew: false, path: publicUrl });
+                    });
+                    renderizarPreviews();
+                }
             }
         }
 
@@ -288,10 +321,20 @@
                 } else {
                     payload.estatus = 'Disponible';
                     payload.creado_por = userEmail;
+                    if (consignacionId) payload.origen_consignacion_id = parseInt(consignacionId);
                     result = await _supabase.from('inventario').insert([payload]).select();
                 }
 
                 if (result.error) throw result.error;
+
+                // Cerramos el circulo: la consignacion queda marcada como
+                // promovida y apuntando a la unidad recien publicada.
+                if (consignacionId && result.data?.[0]?.id) {
+                    await _supabase.from('consignaciones')
+                        .update({ estatus: 'Promovido a Inventario', inventario_id: result.data[0].id })
+                        .eq('id', consignacionId);
+                }
+
                 window.location.href = 'inventario.html';
 
             } catch (err) {

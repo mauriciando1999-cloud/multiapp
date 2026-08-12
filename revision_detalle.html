@@ -142,6 +142,19 @@
                         Rechazar
                     </button>
                 </div>
+
+                <div id="card-promover" class="neu-card p-6 sm:p-8 hidden">
+                    <p class="label-admin mb-4 text-center text-[#FF8801]">Publicar en Stock</p>
+                    <a id="btn-promover" href="#" class="w-full bg-black text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-[#FF8801] transition-all shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-warehouse"></i> Promover a Inventario
+                    </a>
+                    <p class="text-[9px] text-muted font-bold uppercase text-center mt-3 leading-relaxed">Precarga marca, año, km y fotos. Vas a poder corregir datos y subir fotos nuevas antes de publicar.</p>
+                </div>
+
+                <div id="card-ya-inventario" class="neu-card p-6 sm:p-8 text-center hidden">
+                    <p class="label-admin mb-2 text-green-600"><i class="fa-solid fa-circle-check mr-1"></i> Ya está en Inventario</p>
+                    <a id="link-ver-inventario" href="#" class="text-[10px] font-black uppercase text-muted hover:text-[#FF8801] transition-colors">Ver ficha →</a>
+                </div>
             </aside>
         </div>
     </main>
@@ -174,7 +187,17 @@
                 
                 // MUESTRA EL CAMPO TIPO
                 document.getElementById('val-tipo').innerText = data.tipo || 'S/D';
-                
+
+                // Ya se publico en inventario: mostramos el link, no el
+                // boton de promover (evita duplicar la unidad).
+                if (data.inventario_id) {
+                    document.getElementById('card-ya-inventario').classList.remove('hidden');
+                    document.getElementById('link-ver-inventario').href = `detalle.html?id=${data.inventario_id}`;
+                } else if (data.estatus === 'Aprobado' || data.estatus === 'Agendado') {
+                    document.getElementById('card-promover').classList.remove('hidden');
+                    document.getElementById('btn-promover').href = `registro.html?desde_consignacion=${registroId}`;
+                }
+
                 if (data.estatus && data.estatus.toLowerCase() !== 'pendiente') {
                     const badge = document.getElementById('badge-estatus');
                     badge.innerText = data.estatus;

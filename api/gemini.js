@@ -51,8 +51,15 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Llave de API no configurada en Vercel.' });
         }
 
+        // gemini-1.5-flash fue retirado por Google (404 not found); se
+        // reemplaza por gemini-2.5-flash, que si esta disponible con esta
+        // key. Se apaga el thinking (no hace falta para describir una
+        // foto de un carro) para no gastar tokens de mas.
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+            generationConfig: { thinkingConfig: { thinkingBudget: 0 } }
+        });
 
         let result;
         if (image && mimeType) {

@@ -42,7 +42,7 @@
                     ← Volver a Central
                 </a>
                 <h1 class="text-4xl sm:text-6xl md:text-8xl font-title uppercase leading-[0.85] tracking-tight text-[#FF8801]">LEADS.</h1>
-                <p class="text-xs text-muted font-bold uppercase tracking-widest mt-2">Compradores y consignaciones, todo en un lugar</p>
+                <p class="text-xs text-muted font-bold uppercase tracking-widest mt-2">Compradores, consignaciones y solicitudes de vendedor, todo en un lugar</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="filtrarPor('todos')" class="filtro-btn neu-pressable activo px-3 sm:px-4 py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest" data-filtro="todos">Todos</button>
@@ -73,6 +73,8 @@
 
         let todosLosLeads = [];
         let todasLasConsignaciones = [];
+        let solicitudesVendedor = [];
+        let gerentesPorSlug = {};
         let filtroActual = 'todos';
         let vehiculosPorId = {};
         let leadsConVenta = new Set();
@@ -91,9 +93,13 @@
         }
 
         async function cargarLeads() {
-            const [{ data: leads, error: errLeads }, { data: consig, error: errConsig }] = await Promise.all([
+            const [{ data: leads, error: errLeads }, { data: consig, error: errConsig }, { data: pendientes, error: errPend }, { data: gerentes }] = await Promise.all([
                 _supabase.from('consultas_showroom').select('*').order('creado_el', { ascending: false }),
-                _supabase.from('consignaciones').select('*').order('created_at', { ascending: false })
+                _supabase.from('consignaciones').select('*').order('created_at', { ascending: false }),
+                // RLS ya filtra esto: el admin ve todas, un gerente solo las
+                // solicitudes de vendedor que se le asignaron a el.
+                _supabase.from('vendedores').select('*').eq('activo', false).order('created_at', { ascending: false }),
+                _supabase.from('lista_gerentes').select('slug, nombre, apellido')
             ]);
 
             if (errLeads) {
@@ -102,6 +108,9 @@
             }
             todosLosLeads = leads || [];
             todasLasConsignaciones = errConsig ? [] : (consig || []);
+            solicitudesVendedor = errPend ? [] : (pendientes || []);
+            gerentesPorSlug = {};
+            (gerentes || []).forEach(g => { gerentesPorSlug[g.slug] = `${g.nombre} ${g.apellido || ''}`.trim(); });
 
             const idsUnicos = [...new Set(todosLosLeads.flatMap(l => l.vehiculo_ids || []))];
             if (idsUnicos.length > 0) {
@@ -137,8 +146,9 @@
 
             const leadsConTipo = todosLosLeads.map(l => ({ _tipo: 'lead', _fecha: l.creado_el, _pendiente: l.estatus !== 'Contactado', data: l }));
             const consigConTipo = todasLasConsignaciones.map(c => ({ _tipo: 'consignacion', _fecha: c.created_at, _pendiente: PENDIENTES_CONSIGNACION.includes(c.estatus), data: c }));
+            const vendedorConTipo = solicitudesVendedor.map(v => ({ _tipo: 'vendedor', _fecha: v.created_at, _pendiente: true, data: v }));
 
-            let items = [...leadsConTipo, ...consigConTipo];
+            let items = [...leadsConTipo, ...consigConTipo, ...vendedorConTipo];
             if (filtroActual === 'pendientes') items = items.filter(i => i._pendiente);
             if (filtroActual === 'gestionados') items = items.filter(i => !i._pendiente);
             items.sort((a, b) => new Date(b._fecha) - new Date(a._fecha));
@@ -148,7 +158,11 @@
                 return;
             }
 
-            cont.innerHTML = items.map(item => item._tipo === 'lead' ? renderCardLead(item.data) : renderCardConsignacion(item.data)).join('');
+            cont.innerHTML = items.map(item => {
+                if (item._tipo === 'lead') return renderCardLead(item.data);
+                if (item._tipo === 'consignacion') return renderCardConsignacion(item.data);
+                return renderCardVendedor(item.data);
+            }).join('');
         }
 
         function renderCardLead(l) {
@@ -214,6 +228,41 @@
                     <span class="neu-card-sm neu-pressable px-4 py-3 text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-2">Revisar <i class="fa-solid fa-arrow-right"></i></span>
                 </div>
             </a>`;
+        }
+
+        function renderCardVendedor(v) {
+            const gerenteNombre = gerentesPorSlug[v.gerente_id] || v.gerente_id || 'Sin asignar';
+            return `
+            <div class="neu-card p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-amber-400">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-amber-100 text-amber-700"><i class="fa-solid fa-user-plus mr-1"></i>Solicitud de Vendedor</span>
+                        <span class="text-[9px] text-muted font-bold">${escapeHtml(new Date(v.created_at).toLocaleString('es-VE'))}</span>
+                    </div>
+                    <h3 class="font-black text-base sm:text-lg uppercase italic truncate">${escapeHtml(v.nombre)} ${escapeHtml(v.apellido || '')}</h3>
+                    <p class="text-xs text-muted font-bold mt-1">${v.email ? escapeHtml(v.email) + ' · ' : ''}${escapeHtml(v.whatsapp)}${v.cedula ? ' · CI ' + escapeHtml(v.cedula) : ''}</p>
+                    <p class="text-[10px] text-muted font-bold uppercase mt-2">Gerencia: <span class="text-black">${escapeHtml(gerenteNombre)}</span></p>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    <button onclick="aprobarVendedor('${v.slug}')" class="neu-card-sm neu-pressable bg-green-600 text-white px-4 py-3 text-[10px] font-black uppercase tracking-widest">Aprobar</button>
+                    <button onclick="rechazarVendedorUI('${v.slug}')" class="neu-card-sm neu-pressable text-red-500 px-4 py-3 text-[10px] font-black uppercase tracking-widest">Rechazar</button>
+                </div>
+            </div>`;
+        }
+
+        async function aprobarVendedor(slug) {
+            const { error } = await _supabase.rpc('aprobar_vendedor', { p_slug: slug });
+            if (error) return alert('Error: ' + error.message);
+            solicitudesVendedor = solicitudesVendedor.filter(v => v.slug !== slug);
+            renderLeads();
+        }
+
+        async function rechazarVendedorUI(slug) {
+            if (!confirm('¿Rechazar esta solicitud de vendedor? No se puede deshacer.')) return;
+            const { error } = await _supabase.rpc('rechazar_vendedor', { p_slug: slug });
+            if (error) return alert('Error: ' + error.message);
+            solicitudesVendedor = solicitudesVendedor.filter(v => v.slug !== slug);
+            renderLeads();
         }
 
         async function marcarContactado(id) {
